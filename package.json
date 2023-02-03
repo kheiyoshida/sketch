@@ -5,7 +5,8 @@
   "scripts": {
     "lint": "eslint ./src",
     "draw": "sh -c 'PROJECT=${0} webpack-dev-server --mode development'",
-    "new": "sh -c 'mkdir src/projects/${0} && touch src/projects/${0}/index.ts'"
+    "new": "sh -c 'mkdir src/projects/${0} && touch src/projects/${0}/index.ts'",
+    "build": "PROJECT=lo webpack"
   },
   "devDependencies": {
     "@babel/core": "^7.19.6",
