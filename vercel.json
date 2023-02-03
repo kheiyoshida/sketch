@@ -1,6 +1,9 @@
 {
-    "redirects": [
-      { "source": "/foo", "destination": "/index.html" }
+    "rewrites": [
+        { 
+            "source": "/(.*)",
+            "destination": "/index.html" 
+        }
     ]
   }
   
