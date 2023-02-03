@@ -31,16 +31,13 @@ const config: Configuration = {
     extensions: [".ts", ".js"],
   },
   output: {
-    path: path.resolve(__dirname, "dist/bundle"),
-    filename: "index.js",
+    path: path.resolve(__dirname, "dist"),
+    filename: "bundle.js",
   },
   devServer: {
-    static: path.join(__dirname, "dist/bundle"),
+    static: path.join(__dirname, "dist"),
     compress: true,
     port: 3000,
-    historyApiFallback: {
-      index: 'index.html'
-    }
   },
 }
 

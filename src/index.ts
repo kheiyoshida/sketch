@@ -27,6 +27,7 @@ const sketchFactory = (s: Sketch) => (p:p5) => {
 ;(async function () {
   
   const PROJECT = process.env.PROJECT
+  // const PROJECT = window.location.pathname
   const canvas = document.getElementById('canvas')
 
   if (!PROJECT) {
