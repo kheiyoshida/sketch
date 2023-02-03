@@ -1,7 +1,7 @@
 import p5 from "p5";
 import { destVect, vline } from "../../lib/utils";
 import { randomBetween } from "../sk_01/utils";
-import { simmer, Wing } from "./wing";
+import { Wing } from "./wing";
 
 let cw: number;
 let ch: number;
@@ -57,9 +57,6 @@ const draw = () => {
   }
 
   if (ws.length < 5) {
-    console.log(
-      randomBetween(0,5)
-    )
     if (Math.floor(randomBetween(0,4)) == 0) {
       ws.push(
         new Wing(randomVect(), 0, 20, 0)
@@ -86,8 +83,6 @@ const rangedBetween = (base:number, range: number, limit: number) => {
   return Math.min(randomBetween(base+range, base-range), limit)
 }
 
-
-
 const wing = (
   v: p5.Vector,
   angle = 315,
@@ -110,9 +105,6 @@ const wing = (
     wing(d3, angle+60, len, re-1)
   }
 }
-
-
-
 
 export default <Sketch>{
   setup,
