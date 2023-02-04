@@ -2,7 +2,7 @@ import { PubWork, published } from "./pub"
 
 export const home = () => {
   head()
-  published.forEach(w => genPage(w))
+  pages()  
 }
 
 const head = () => {
@@ -11,11 +11,17 @@ const head = () => {
   document.body.appendChild(h1)
 }
 
+const pages = () => {
+  const ul = document.createElement('ul')
+  published.forEach(w => ul.appendChild(genPage(w)))
+  document.body.appendChild(ul)
+}
+
 const genPage = (w:PubWork) => {
-  const d = document.createElement('div')
+  const li = document.createElement('li')
   const a = document.createElement('a')
   a.href = w.path
   a.innerText = w.path
-  d.appendChild(a)
-  document.body.appendChild(d)
+  li.appendChild(a)
+  return li
 }

@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "lint": "eslint ./src",
-    "draw": "sh -c 'PROJECT=${0} webpack-dev-server --mode development'",
+    "dev": "webpack-dev-server --mode development",
     "new": "sh -c 'mkdir src/projects/${0} && touch src/projects/${0}/index.ts'",
     "build": "PROJECT=lo webpack"
   },

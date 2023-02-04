@@ -8,9 +8,9 @@ export const published:PubWork[] = [
     path: 'clock'
   },
   {
-    path: 'gene'
+    path: 'gen'
   },
   {
-    path: 'lo'
+    path: 'rebirth'
   },
 ]
