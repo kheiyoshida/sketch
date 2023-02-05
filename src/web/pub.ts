@@ -5,6 +5,9 @@ export type PubWork = {
 
 export const published:PubWork[] = [
   {
+    path: 'maze'
+  },
+  {
     path: 'clock'
   },
   {
