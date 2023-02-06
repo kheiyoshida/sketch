@@ -13,18 +13,20 @@ export type Layer = {
   back: Frame
 }
 
+type PathPattern = 'wall'|'corridor'
+
 const pointLine = (p1: number[], p2: number[]) => {
   p.line(p1[0], p1[1], p2[0], p2[1])
 }
 
-export const framePaint = () => {
+const framePaint = () => {
   p.rect(0, 0, p.windowWidth, p.windowHeight)
 }
 
 const side = (
   l: Layer,
   direction: 'r'|'l',
-  pattern: 'corridor'|'wall'
+  pattern: PathPattern
 ) => {
   if (pattern === 'corridor') {
     if (direction==='l') {
@@ -49,7 +51,7 @@ const side = (
 
 const front = (
   l: Layer,
-  pattern: 'corridor'|'wall'|'dark',
+  pattern: PathPattern|'dark',
 ) => {
   if(pattern === 'corridor') {
     pointLine(l.front.tl, l.back.tl)
@@ -76,7 +78,7 @@ const front = (
   }
 }
 
-type PathPattern = 'wall'|'corridor'
+
 
 type Terrain = {
   left: PathPattern
@@ -90,7 +92,10 @@ const lookAround = (maze: Maze, node: Node, far:boolean):Terrain => {
   const r = node.edges[compass('r', maze.direction)]
   return {
     front: f 
-      ? far ? 'dark' : 'corridor' 
+      ? 
+        far 
+          ? 'dark' 
+          : 'corridor' 
       : 'wall',
     left: l ? 'corridor' : 'wall',
     right: r ? 'corridor' : 'wall'

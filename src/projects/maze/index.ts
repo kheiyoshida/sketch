@@ -4,23 +4,16 @@ import { Frame, render } from "./render"
 
 let bgColor: p5.Color
 let fill: p5.Color
-let unit: number
-let fps = 30
 let ww: number, wh : number
 
 const setup = () => {
   [ww, wh] = [p.windowWidth, p.windowHeight]
   p.createCanvas(ww, wh)
-  // bgColor = p.color(10, 0)
   bgColor = p.color(0,0,0)
   p.stroke(255, 200)
   fill = bgColor
-  // fill.setAlpha(50)
   p.fill(fill)
-  
   p.background(bgColor)
-  unit = p.TWO_PI / 60
-  p.frameRate(fps)
   setupMaze()
   p.noLoop()
 }
@@ -68,12 +61,6 @@ const setupMaze = () => {
           render(frames, maze)
           break;
         case p.LEFT_ARROW:
-          maze.turn('l')
-          render(frames, maze)
-          break;
-        case p.DOWN_ARROW:
-          maze.turn('l')
-          render(frames, maze)
           maze.turn('l')
           render(frames, maze)
           break;

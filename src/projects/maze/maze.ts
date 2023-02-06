@@ -4,16 +4,15 @@ type Matrix = Array<Array<Node|null>>
 type Direction = 'n'|'e'|'s'|'w'
 
 const NESW = ['n', 'e', 's', 'w'] as const
-export const compass = (d: 'r'|'l', currentDirection: Direction) => {
+export const compass = (d: 'r'|'l'|'o', currentDirection: Direction) => {
   let i = NESW.indexOf(currentDirection)
-  if (d === 'r') {
-    return NESW[
-      i === 3 ? 0 : i+1
-    ]
-  } else {
-    return NESW[
-      i === 0 ? 3 : i-1
-    ]
+  switch (d) {
+    case 'r':
+      return NESW[(i+1)%4]
+    case 'l':
+      return NESW[(i+3)%4]
+    case 'o':
+      return NESW[(i+2)%4]
   }
 }
 
@@ -29,20 +28,6 @@ export class Maze {
 
   constructor() {
     this._matrix = buildMatrix()
-    // this._matrix = [
-    //   [
-    //     new Node({s: true}), null, new Node(), new Node()
-    //   ],
-    //   [
-    //     new Node({n: true, e: true, s: true}), new Node({w:true, e: true}), new Node({w: true, e: true}), new Node({w: true, s: true}),
-    //   ],
-    //   [
-    //     new Node({n: true, s: true}), null, new Node(), new Node({n: true, s: true}),
-    //   ],
-    //   [
-    //     new Node({n: true}), null, new Node(), new Node({n: true}),
-    //   ],
-    // ]
   }
 
   turn(d: 'r'|'l') {
@@ -94,59 +79,25 @@ const buildMatrix = () => {
       }
     }
   }
-  
 
   // put edges
-  // damn think it can be more concise
   const adjacent = (d: Direction, i: number,j: number) => {
     switch(d) {
       case 'n':
-        if (i>0) {
-          return matrix[i-1][j]
-        }
-        break;
+        return i>0 ? matrix[i-1][j] : null
       case 'e':
-        if (j<SIZE-1) {
-          return matrix[i][j+1]
-        }
-        break;
+        return j<SIZE-1 ? matrix[i][j+1] : null
       case 's':
-        if (i<SIZE-1 ) {
-          return matrix[i+1][j]
-        }
-        break;
+        return i<SIZE-1 ? matrix[i+1][j] : null
       case 'w':
-        if (j>0) {
-          return matrix[i][j-1]
-        }
-        break;      
+        return j>0 ? matrix[i][j-1] : null
     }
   }
   const lookAround = (i:number, j: number) => {
     const around = {} as {[k in Direction]?: boolean}
     for (const direction of NESW) {
-      switch(direction) {
-        case 'n':
-          if (i>0 && matrix[i-1][j]) {
-            Object.assign(around, {[direction]: true})
-          }
-          break;
-        case 'e':
-          if (j<SIZE-1 && matrix[i][j+1]) {
-            Object.assign(around, {[direction]: true})
-          }
-          break;
-        case 's':
-          if (i<SIZE-1 && matrix[i+1][j]) {
-            Object.assign(around, {[direction]: true})
-          }
-          break;
-        case 'w':
-          
-          if (j>0 && matrix[i][j-1]) {
-            Object.assign(around, {[direction]: true})
-          }
-          break;
+      if (adjacent(direction, i, j)) {
+        Object.assign(around, {[direction]: true})
       }
     }
     return around
@@ -158,14 +109,15 @@ const buildMatrix = () => {
         const around = lookAround(i,j)
         for (const d in around) {
           if (gen()) {
-            node.set({[d]: true})
-            adjacent(d as Direction, i, j)?.set({[compass('r', compass('r', d as Direction))]: true})
+            node
+              .set({[d]: true})
+            adjacent(d as Direction, i, j)!
+              .set({[compass('o', d as Direction)]: true})
           }
         }
       }
     }
   }
-
   return matrix
 }
 
