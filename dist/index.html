@@ -1,13 +1,20 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <style>
+      :root {
+        /* touch-action: pan-x pan-y; */
+        touch-action: manipulation;
+        height: 100% 
+      }
       html, body {margin: 0; height: 100%; overflow: hidden}
       html {
         font-size: clamp(20px, 3.2vw, 36px);
         font-family: 'Courier New', Courier, monospace;
       }
       body {
+        touch-action: manipulation;
         letter-spacing: .2em;
         width:100vw;
         height: 100vh;
@@ -37,11 +44,20 @@
       }
       canvas {
         border: 1px solid black;
+        touch-action: manipulation;
+      }
+      div {
+        touch-action: manipulation;
       }
     </style>
   </head>
   <body>
     <div id="canvas"></div>
     <script src="bundle.js"></script>
+    <script>
+      document.body.addEventListener('dbclick', function (e) {
+        e.preventDefault()
+      })
+    </script>
   </body>
 </html>

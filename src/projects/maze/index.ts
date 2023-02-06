@@ -1,7 +1,6 @@
-import p5, { Element } from "p5"
-import { pushPop } from "../../lib/utils"
+import p5 from "p5"
 import { randomBetween } from "../sk_01/utils"
-import { renderGUI } from "./gui"
+import { renderGUI, renderHelp } from "./gui"
 import { Mapper } from "./mapper"
 import { Maze } from "./maze"
 import { Frame, intervalRender, render, transRender } from "./render"
@@ -15,6 +14,7 @@ const interval = 1000 / fps
 const setup = () => {
   [ww, wh] = [p.windowWidth, p.windowHeight]
   p.createCanvas(ww, wh)
+
   bgColor = p.color(0,0,0)
   p.stroke(255, 200)
   fill = bgColor
@@ -22,6 +22,9 @@ const setup = () => {
   p.background(bgColor)
   setupMaze()
   p.noLoop()
+  p.touchStarted = () => false
+  p.touchEnded = () => false
+  p.touchMoved = () => false
 }
 
 let mapOpen = false
@@ -42,7 +45,7 @@ const setupMaze = () => {
     )})
 
   render(frames(1), maze)
-
+  
   const go = () => {
     if (!maze.canProceed) return
     intervalRender(interval, [
@@ -86,29 +89,39 @@ const setupMaze = () => {
       mapOpen = false
     }
   }
-  
-  p.keyPressed = () => {
-    if (p.keyCode === p.UP_ARROW) {
-      go()
-    } else if (p.keyCode === p.RIGHT_ARROW ) {
-      turn('r')
-    } else if (p.keyCode === p.LEFT_ARROW) {
-      turn('l')
-    } else if (p.keyCode === p.TAB) {
-      callMap()
-    }
-    if (p.key === 'm') {
-      callMap()
-    }
-  }
 
   if (ww < 1000) {
     const {map, up, right, left} = renderGUI(ww, wh)
-    map.mousePressed(callMap)
-    up.mousePressed(go)
-    right.mousePressed(() => turn('r'))
-    left.mousePressed(() => turn('l'))
+    map.touchStarted(callMap)
+    up.touchStarted(go)
+    right.touchStarted(() => turn('r'))
+    left.touchStarted(() => turn('l'))
+  } else {
+    const keyCodeMap = {
+      [p.UP_ARROW]: go,
+      [p.RIGHT_ARROW]: () => turn('r'),
+      [p.LEFT_ARROW]: () => turn('l'),
+      [p.DOWN_ARROW]: callMap,
+      [p.ENTER]: callMap,
+    } as const
+    const keyMap = {
+      'm': callMap,
+      'w': go,
+      'a': () => turn('l'),
+      's': callMap,
+      'd': () => turn('r'),
+    } as const
+    p.keyPressed = () => {
+      if (p.keyCode in keyCodeMap) {
+        keyCodeMap[p.keyCode]()
+      }
+      if (p.key in keyMap) {
+        keyMap[p.key as keyof typeof keyMap]()
+      }
+    }
   }
+
+  renderHelp(ww, wh)
 }
 
 export const createFrame = (rectWH: number[]):Frame => {
