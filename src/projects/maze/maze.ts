@@ -1,9 +1,9 @@
 import { randomBetween } from "../../lib/utils"
 
-type Matrix = Array<Array<Node|null>>
-type Direction = 'n'|'e'|'s'|'w'
+export type Matrix = Array<Array<Node|null>>
+export type Direction = 'n'|'e'|'s'|'w'
 
-const NESW = ['n', 'e', 's', 'w'] as const
+export const NESW = ['n', 'e', 's', 'w'] as const
 export const compass = (d: 'r'|'l'|'o', currentDirection: Direction) => {
   let i = NESW.indexOf(currentDirection)
   switch (d) {
@@ -19,6 +19,7 @@ export const compass = (d: 'r'|'l'|'o', currentDirection: Direction) => {
 export class Maze {
   
   private _matrix: Matrix
+  private _builder: MatrixBuilder
   current: number[] = [0,0]
   direction: Direction = 'n'
 
@@ -26,8 +27,13 @@ export class Maze {
     return this._matrix[this.current[0]][this.current[1]]!
   }
 
-  constructor() {
-    this._matrix = buildMatrix()
+  constructor(public size:number) {
+    this._builder = new MatrixBuilder(size)
+    this._matrix = this._builder.build()
+  }
+
+  get matrix() {
+    return this._matrix
   }
 
   turn(d: 'r'|'l') {
@@ -52,75 +58,83 @@ export class Maze {
     return this._matrix[l[0]][l[1]]
   }
 
+  get canProceed() {
+    return this.currentNode!.edges[this.direction]
+  }
+  
   navigate() {
-    if (!this.currentNode) {
-      return
-    } else if (this.currentNode.edges[this.direction]) {
+    if (this.canProceed) {
+      const from = this.current
       this.current = this.getFrontLoc()
-    } else {
-      return false
+      return {from, dest: this.current}
     }
   }
 }
 
-const SIZE = 30
-const fill = 0.66
-const gen = () => Math.random() < fill
+class MatrixBuilder {
+  constructor(
+    private size = 30,
+    private fill = 0.68
+  ) {}
 
-const buildMatrix = () => {
-  const matrix:Matrix = Array.from(Array(SIZE), () => new Array(SIZE).fill(null))
+  gen() {
+    return Math.random() < this.fill
+  }
 
-  // place nodes
-  matrix[0][0] = new Node()
-  for (let i = 0; i< SIZE; i++) {
-    for (let j = 0; j< SIZE; j++) {
-      if (gen()) {
-        matrix[i][j] = new Node()
+  build() {
+    const matrix:Matrix = Array.from(Array(this.size), () => new Array(this.size).fill(null))
+
+    // place nodes
+    matrix[0][0] = new Node()
+    for (let i = 0; i< this.size; i++) {
+      for (let j = 0; j< this.size; j++) {
+        if (this.gen()) {
+          matrix[i][j] = new Node()
+        }
       }
     }
-  }
 
-  // put edges
-  const adjacent = (d: Direction, i: number,j: number) => {
-    switch(d) {
-      case 'n':
-        return i>0 ? matrix[i-1][j] : null
-      case 'e':
-        return j<SIZE-1 ? matrix[i][j+1] : null
-      case 's':
-        return i<SIZE-1 ? matrix[i+1][j] : null
-      case 'w':
-        return j>0 ? matrix[i][j-1] : null
-    }
-  }
-  const lookAround = (i:number, j: number) => {
-    const around = {} as {[k in Direction]?: boolean}
-    for (const direction of NESW) {
-      if (adjacent(direction, i, j)) {
-        Object.assign(around, {[direction]: true})
+    // put edges
+    const adjacent = (d: Direction, i: number,j: number) => {
+      switch(d) {
+        case 'n':
+          return i>0 ? matrix[i-1][j] : null
+        case 'e':
+          return j<this.size-1 ? matrix[i][j+1] : null
+        case 's':
+          return i<this.size-1 ? matrix[i+1][j] : null
+        case 'w':
+          return j>0 ? matrix[i][j-1] : null
       }
     }
-    return around
-  }
-  for (let i = 0; i< SIZE; i++) {
-    for (let j = 0; j< SIZE; j++) {
-      const node = matrix[i][j]
-      if (node) {
-        const around = lookAround(i,j)
-        for (const d in around) {
-          if (gen()) {
-            node
-              .set({[d]: true})
-            adjacent(d as Direction, i, j)!
-              .set({[compass('o', d as Direction)]: true})
+    const lookAround = (i:number, j: number) => {
+      const around = {} as {[k in Direction]?: boolean}
+      for (const direction of NESW) {
+        if (adjacent(direction, i, j)) {
+          Object.assign(around, {[direction]: true})
+        }
+      }
+      return around
+    }
+    for (let i = 0; i< this.size; i++) {
+      for (let j = 0; j< this.size; j++) {
+        const node = matrix[i][j]
+        if (node) {
+          const around = lookAround(i,j)
+          for (const d in around) {
+            if (this.gen()) {
+              node
+                .set({[d]: true})
+              adjacent(d as Direction, i, j)!
+                .set({[compass('o', d as Direction)]: true})
+            }
           }
         }
       }
     }
-  }
-  return matrix
+    return matrix
+  } 
 }
-
 
 type Edges = {
   [k in Direction]: boolean

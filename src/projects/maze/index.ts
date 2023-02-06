@@ -1,5 +1,7 @@
 import p5 from "p5"
 import { pushPop } from "../../lib/utils"
+import { randomBetween } from "../sk_01/utils"
+import { Mapper } from "./mapper"
 import { Maze } from "./maze"
 import { Frame, intervalRender, render, transRender } from "./render"
 
@@ -21,20 +23,29 @@ const setup = () => {
   p.noLoop()
 }
 
+let mapOpen = false
+
 const setupMaze = () => {
-  const maze = new Maze()
+  const maze = new Maze(20)
+  const mapper = new Mapper(maze)
 
   const frames = (magnify=1):Frame[] => [
-    1, 0.8, 0.3, 0.2, 0.05, 0.03, 0.02
-  ].map(scale => createFrame(
-      [ww*magnify*scale, wh*magnify*scale]
-    ))
+    1, 0.7, 0.3, 0.2, 0.05, 0.03, 0.02
+  ].map(scale => {
+    const r = randomBetween(0.95,1.05)
+    return createFrame(
+      [
+        ww*magnify*scale*r,
+        wh*magnify*scale*r
+      ]
+    )})
 
   render(frames(1), maze)
 
-  p.keyPressed = function () {
+  p.keyPressed = () => {
     switch (p.keyCode) {
       case p.UP_ARROW:
+        if (!maze.canProceed) return
         intervalRender(interval, [
           () => render(frames(1.05), maze),
           () => render(frames(1.1), maze),
@@ -42,8 +53,12 @@ const setupMaze = () => {
           () => render(frames(1.3), maze),
           () => render(frames(1.4), maze),
           () => render(frames(1.5), maze),
+          () => render(frames(1.6), maze),
           () => {
-            maze.navigate()
+            const res = maze.navigate()
+            if (res) {
+              mapper.track(res)
+            }
             render(frames(1), maze)
           }
         ])
@@ -62,6 +77,15 @@ const setupMaze = () => {
           }
         ])
         break;
+    }
+    if (p.key === 'm') {
+      if (!mapOpen) {
+        mapper.open(maze.current, maze.direction)
+        mapOpen = true
+      } else {
+        render(frames(1), maze)
+        mapOpen = false
+      }
     }
   }
 }
