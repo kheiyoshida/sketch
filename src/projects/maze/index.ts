@@ -1,6 +1,7 @@
-import p5 from "p5"
+import p5, { Element } from "p5"
 import { pushPop } from "../../lib/utils"
 import { randomBetween } from "../sk_01/utils"
+import { renderGUI } from "./gui"
 import { Mapper } from "./mapper"
 import { Maze } from "./maze"
 import { Frame, intervalRender, render, transRender } from "./render"
@@ -42,51 +43,71 @@ const setupMaze = () => {
 
   render(frames(1), maze)
 
+  const go = () => {
+    if (!maze.canProceed) return
+    intervalRender(interval, [
+      () => render(frames(1.05), maze),
+      () => render(frames(1.1), maze),
+      () => render(frames(1.2), maze),
+      () => render(frames(1.3), maze),
+      () => render(frames(1.4), maze),
+      () => render(frames(1.5), maze),
+      () => render(frames(1.6), maze),
+      () => {
+        const res = maze.navigate()
+        if (res) {
+          mapper.track(res)
+        }
+        render(frames(1), maze)
+      }
+    ])
+  }
+
+  const turn = (dir: 'r'|'l') => {
+    const d = dir === 'r' ? -1 : 1
+    intervalRender(interval, [
+      () => transRender(frames(0.85),maze, d*ww*0.01),
+      () => transRender(frames(0.9),maze, d*ww*0.03),
+      () => transRender(frames(0.95),maze, d*ww*0.08),
+      () => transRender(frames(),maze, d*ww*0.11),
+      () => {
+        maze.turn(dir)
+        render(frames(), maze)
+      }
+    ])
+  }
+
+  const callMap = () => {
+    if (!mapOpen) {
+      mapper.open(maze.current, maze.direction)
+      mapOpen = true
+    } else {
+      render(frames(1), maze)
+      mapOpen = false
+    }
+  }
+  
   p.keyPressed = () => {
-    switch (p.keyCode) {
-      case p.UP_ARROW:
-        if (!maze.canProceed) return
-        intervalRender(interval, [
-          () => render(frames(1.05), maze),
-          () => render(frames(1.1), maze),
-          () => render(frames(1.2), maze),
-          () => render(frames(1.3), maze),
-          () => render(frames(1.4), maze),
-          () => render(frames(1.5), maze),
-          () => render(frames(1.6), maze),
-          () => {
-            const res = maze.navigate()
-            if (res) {
-              mapper.track(res)
-            }
-            render(frames(1), maze)
-          }
-        ])
-        break;
-      case p.RIGHT_ARROW:
-      case p.LEFT_ARROW:
-        const d = p.keyCode === p.RIGHT_ARROW ? -1 : 1
-        intervalRender(interval, [
-          () => transRender(frames(0.85),maze, d*ww*0.01),
-          () => transRender(frames(0.9),maze, d*ww*0.03),
-          () => transRender(frames(0.95),maze, d*ww*0.08),
-          () => transRender(frames(),maze, d*ww*0.11),
-          () => {
-            maze.turn(d === -1 ? 'r' : 'l')
-            render(frames(), maze)
-          }
-        ])
-        break;
+    if (p.keyCode === p.UP_ARROW) {
+      go()
+    } else if (p.keyCode === p.RIGHT_ARROW ) {
+      turn('r')
+    } else if (p.keyCode === p.LEFT_ARROW) {
+      turn('l')
+    } else if (p.keyCode === p.TAB) {
+      callMap()
     }
     if (p.key === 'm') {
-      if (!mapOpen) {
-        mapper.open(maze.current, maze.direction)
-        mapOpen = true
-      } else {
-        render(frames(1), maze)
-        mapOpen = false
-      }
+      callMap()
     }
+  }
+
+  if (ww < 1000) {
+    const {map, up, right, left} = renderGUI(ww, wh)
+    map.mousePressed(callMap)
+    up.mousePressed(go)
+    right.mousePressed(() => turn('r'))
+    left.mousePressed(() => turn('l'))
   }
 }
 
