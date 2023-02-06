@@ -91,6 +91,33 @@ const edge = (
   }
 }
 
+const dark = (
+  l: Layer,
+  a: Terrain
+) => {
+  if (
+    a.left === a.right && 
+    a.right === a.front && 
+    a.front === 'wall'
+  ) {
+    pushPop(() => {
+      p.noStroke()
+      p.fill(0)
+      p.rect(
+        l.front.tl[0], l.front.tl[1],
+        (l.front.tr[0]-l.front.tl[0]), 
+        (l.front.bl[1]-l.front.tl[1])
+      )
+      p.fill(30)
+      p.rect(
+        l.back.tl[0], l.back.tl[1],
+        (l.back.tr[0]-l.back.tl[0]), 
+        (l.back.bl[1]-l.back.tl[1])
+      )
+    })
+  }
+}
+
 type Terrain = {
   left: PathPattern
   right: PathPattern
@@ -130,6 +157,7 @@ export const render = (
   side(frontLayer, 'l', around.left)
   side(frontLayer, 'r', around.right)
   front(backLayer, around.front)
+  dark(backLayer, around)
 
   if (around.front === 'corridor') {
     if (around.left === 'corridor') {

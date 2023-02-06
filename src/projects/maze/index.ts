@@ -1,4 +1,5 @@
 import p5 from "p5"
+import { pushPop } from "../../lib/utils"
 import { randomBetween } from "../sk_01/utils"
 import { renderGUI, renderHelp } from "./gui"
 import { Mapper } from "./mapper"
@@ -11,11 +12,13 @@ let ww: number, wh : number
 const fps = 30
 const interval = 1000 / fps
 
+let mad = 1
+
 const setup = () => {
   [ww, wh] = [p.windowWidth, p.windowHeight]
   p.createCanvas(ww, wh)
 
-  bgColor = p.color(0,0,0)
+  bgColor = p.color(5,250)
   p.stroke(255, 200)
   fill = bgColor
   p.fill(fill)
@@ -36,11 +39,12 @@ const setupMaze = () => {
   const frames = (magnify=1):Frame[] => [
     1, 0.7, 0.3, 0.2, 0.05, 0.03, 0.02
   ].map(scale => {
-    const r = randomBetween(0.95,1.05)
+    const blur = 0.05 * (1 + mad/1000)
+    const r = randomBetween(1-blur,1+blur)
     return createFrame(
       [
         ww*magnify*scale*r,
-        wh*magnify*scale*r
+        wh*magnify*scale*(1 + Math.abs(1-r))
       ]
     )})
 
@@ -64,6 +68,8 @@ const setupMaze = () => {
         render(frames(1), maze)
       }
     ])
+    mad += 10
+    console.log(mad)
   }
 
   const turn = (dir: 'r'|'l') => {
@@ -78,6 +84,7 @@ const setupMaze = () => {
         render(frames(), maze)
       }
     ])
+    mad += 10
   }
 
   const callMap = () => {
@@ -88,6 +95,7 @@ const setupMaze = () => {
       render(frames(1), maze)
       mapOpen = false
     }
+    mad += 100
   }
 
   if (ww < 1000) {
