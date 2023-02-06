@@ -20,7 +20,10 @@ const pointLine = (p1: number[], p2: number[]) => {
 }
 
 const framePaint = () => {
-  p.rect(0, 0, p.windowWidth, p.windowHeight)
+  pushPop(() => {
+    p.noStroke()
+    p.rect(0, 0, p.windowWidth, p.windowHeight)
+  })
 }
 
 const side = (
@@ -32,11 +35,9 @@ const side = (
     if (direction==='l') {
       pointLine(l.back.tl, [l.front.tl[0], l.back.tl[1]])
       pointLine(l.back.bl, [l.front.bl[0], l.back.bl[1]])
-      pointLine(l.front.tl, l.front.bl)
     } else {
       pointLine(l.back.tr, [l.front.tr[0], l.back.tr[1]])
       pointLine(l.back.br, [l.front.br[0], l.back.br[1]])
-      pointLine(l.front.tr, l.front.br)
     }
   } else {
     if (direction==='l') {
@@ -77,8 +78,6 @@ const front = (
     })
   }
 }
-
-
 
 type Terrain = {
   left: PathPattern
@@ -128,3 +127,23 @@ export const render = (
   }
 }
 
+export const intervalRender = (
+  interval: number,
+  renSeq: Array<() => void>
+) => {
+  for(let i = 0; i<renSeq.length; i++) {
+    const ren = renSeq[i]
+    setTimeout(ren, (i+1) * interval)
+  }
+}
+
+export const transRender = (
+  frames: Frame[],
+  maze: Maze,
+  trans: number
+) => {
+  pushPop(() => {
+    p.translate(trans, 0)
+    render(frames, maze)
+  })
+}

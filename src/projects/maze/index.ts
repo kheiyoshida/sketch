@@ -1,10 +1,13 @@
 import p5 from "p5"
+import { pushPop } from "../../lib/utils"
 import { Maze } from "./maze"
-import { Frame, render } from "./render"
+import { Frame, intervalRender, render, transRender } from "./render"
 
 let bgColor: p5.Color
 let fill: p5.Color
 let ww: number, wh : number
+const fps = 30
+const interval = 1000 / fps
 
 const setup = () => {
   [ww, wh] = [p.windowWidth, p.windowHeight]
@@ -18,54 +21,48 @@ const setup = () => {
   p.noLoop()
 }
 
-let magnify = 1;
-
 const setupMaze = () => {
   const maze = new Maze()
 
-  const frames:Frame[] = [
-    createFrame(
-      [ww*magnify, wh*magnify]
-    ),
-    createFrame(
-      [ww*magnify*0.8, wh*magnify*0.8]
-    ),
-    createFrame(
-      [ww*magnify*0.5, wh*magnify*0.5]
-    ),
-    createFrame(
-      [ww*magnify*0.25, wh*magnify*0.25]
-    ),
-    createFrame(
-      [ww*magnify*0.1, wh*magnify*0.1]
-    ),
-    createFrame(
-      [ww*magnify*0.05, wh*magnify*0.05]
-    ),
-    createFrame(
-      [ww*magnify*0.04, wh*magnify*0.04]
-    ),
-  ]
-  
-  render(frames, maze)
+  const frames = (magnify=1):Frame[] => [
+    1, 0.8, 0.3, 0.2, 0.05, 0.03, 0.02
+  ].map(scale => createFrame(
+      [ww*magnify*scale, wh*magnify*scale]
+    ))
+
+  render(frames(1), maze)
 
   p.keyPressed = function () {
-    if ([p.UP_ARROW, p.RIGHT_ARROW, p.LEFT_ARROW].includes(p.keyCode)) {
-      switch (p.keyCode) {
-        case p.UP_ARROW:
-          maze.navigate()
-          render(frames, maze)
-          break;
-        case p.RIGHT_ARROW:
-          maze.turn('r')
-          render(frames, maze)
-          break;
-        case p.LEFT_ARROW:
-          maze.turn('l')
-          render(frames, maze)
-          break;
-      }
-    } 
+    switch (p.keyCode) {
+      case p.UP_ARROW:
+        intervalRender(interval, [
+          () => render(frames(1.05), maze),
+          () => render(frames(1.1), maze),
+          () => render(frames(1.2), maze),
+          () => render(frames(1.3), maze),
+          () => render(frames(1.4), maze),
+          () => render(frames(1.5), maze),
+          () => {
+            maze.navigate()
+            render(frames(1), maze)
+          }
+        ])
+        break;
+      case p.RIGHT_ARROW:
+      case p.LEFT_ARROW:
+        const d = p.keyCode === p.RIGHT_ARROW ? -1 : 1
+        intervalRender(interval, [
+          () => transRender(frames(0.85),maze, d*ww*0.01),
+          () => transRender(frames(0.9),maze, d*ww*0.03),
+          () => transRender(frames(0.95),maze, d*ww*0.08),
+          () => transRender(frames(),maze, d*ww*0.11),
+          () => {
+            maze.turn(d === -1 ? 'r' : 'l')
+            render(frames(), maze)
+          }
+        ])
+        break;
+    }
   }
 }
 
