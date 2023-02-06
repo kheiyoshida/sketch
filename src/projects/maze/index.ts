@@ -18,8 +18,8 @@ const setup = () => {
   [ww, wh] = [p.windowWidth, p.windowHeight]
   p.createCanvas(ww, wh)
 
-  bgColor = p.color(5,250)
-  p.stroke(255, 200)
+  bgColor = p.color(0,250)
+  p.stroke(200, 200)
   fill = bgColor
   p.fill(fill)
   p.background(bgColor)
@@ -37,14 +37,14 @@ const setupMaze = () => {
   const mapper = new Mapper(maze)
 
   const frames = (magnify=1):Frame[] => [
-    1, 0.7, 0.3, 0.2, 0.05, 0.03, 0.02
+    1, 0.7, 0.3, 0.2, 0.09, 0.04, 0.02
   ].map(scale => {
     const blur = 0.05 * (1 + mad/1000)
     const r = randomBetween(1-blur,1+blur)
     return createFrame(
       [
         ww*magnify*scale*r,
-        wh*magnify*scale*(1 + Math.abs(1-r))
+        wh*magnify*scale*r
       ]
     )})
 
@@ -68,8 +68,7 @@ const setupMaze = () => {
         render(frames(1), maze)
       }
     ])
-    mad += 10
-    console.log(mad)
+    mad += 1
   }
 
   const turn = (dir: 'r'|'l') => {
@@ -84,7 +83,7 @@ const setupMaze = () => {
         render(frames(), maze)
       }
     ])
-    mad += 10
+    mad += 1
   }
 
   const callMap = () => {
@@ -95,7 +94,7 @@ const setupMaze = () => {
       render(frames(1), maze)
       mapOpen = false
     }
-    mad += 100
+    mad += 10
   }
 
   if (ww < 1000) {

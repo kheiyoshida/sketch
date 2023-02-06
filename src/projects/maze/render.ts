@@ -1,6 +1,6 @@
-import { fill } from "."
 import { pushPop } from "../../lib/utils"
 import { compass, Maze, Node } from "./maze"
+import { img } from "./wall"
 
 export type Frame = {
   tl: number[],
@@ -102,17 +102,23 @@ const dark = (
   ) {
     pushPop(() => {
       p.noStroke()
-      p.fill(0)
+      p.fill(0,100)
       p.rect(
         l.front.tl[0], l.front.tl[1],
         (l.front.tr[0]-l.front.tl[0]), 
         (l.front.bl[1]-l.front.tl[1])
       )
-      p.fill(30)
+      p.fill(20)
       p.rect(
-        l.back.tl[0], l.back.tl[1],
-        (l.back.tr[0]-l.back.tl[0]), 
+        l.back.tl[0],
+        l.back.tl[1],
+        (l.back.tr[0]-l.back.tl[0]),
         (l.back.bl[1]-l.back.tl[1])
+      )
+      img(
+        l.back.tl,
+        [(l.back.tr[0]-l.back.tl[0]),
+        (l.back.bl[1]-l.back.tl[1])],
       )
     })
   }

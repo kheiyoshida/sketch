@@ -4,7 +4,7 @@ const btnFac = (base: number) => (
   text: string, x: number, y: number
 ) => {
   const btn = p.createDiv(text)
-  btn.style('color', 'rgba(255,255,255,0.5)')
+  btn.style('color', 'rgba(255,255,255,0.4)')
   btn.style('cursor', 'pointer')
   btn.style('letter-spacing', '0')
   btn.style('font-size', `${base}px`)
@@ -31,16 +31,17 @@ export const renderGUI = (ww: number, wh:number) => {
 }
 
 export const renderHelp = (ww: number, wh: number) => {
-  const base = wh * 0.03
-  const help = btnFac(base)('ⓘ', base, 2 * base)
+  const base = ww < 1000 ? wh * 0.04 : wh * 0.03
+  const help = btnFac(base)('ⓘ', base, 1.5 * base)
   const render = () => {
     pushPop(() => {
       p.textSize(base/2)
-      p.fill(255)
+      p.fill(200)
       p.text(
         `
-        ARROW KEY/WASD: TURN AROUND\n
-        ENTER/M: OPEN MAP\n
+        UP: MOVE\n
+        LEFT/RIGHT: TURN\n
+        ENTER/M/DOWN: OPEN MAP\n
         PAGE RELOAD: REGENERATE
         `,
         0,
