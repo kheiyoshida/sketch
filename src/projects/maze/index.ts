@@ -5,8 +5,8 @@ import { Mapper } from "./mapper"
 import { Maze } from "./maze"
 import { Frame, intervalRender, render, transRender } from "./render"
 
-let bgColor: p5.Color
-let fill: p5.Color
+export let bgColor: p5.Color
+export let fill: p5.Color
 let ww: number, wh : number
 const fps = 30
 const interval = 1000 / fps

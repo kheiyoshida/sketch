@@ -1,3 +1,4 @@
+import { fill } from "."
 import { pushPop } from "../../lib/utils"
 import { compass, Maze, Node } from "./maze"
 
@@ -79,6 +80,17 @@ const front = (
   }
 }
 
+const edge = (
+  l: Layer,
+  direction: 'r' | 'l',
+) => {
+  if (direction === 'r') {
+    pointLine(l.back.tr, l.back.br)
+  } else {
+    pointLine(l.back.tl, l.back.bl)
+  }
+}
+
 type Terrain = {
   left: PathPattern
   right: PathPattern
@@ -119,11 +131,19 @@ export const render = (
   side(frontLayer, 'r', around.right)
   front(backLayer, around.front)
 
-  if (around.front === 'corridor' && layer<3) {
-    render(
-      frames, maze, layer+2, 
-      maze.getFrontNode({dist: layer/2+1})!
-    )
+  if (around.front === 'corridor') {
+    if (around.left === 'corridor') {
+      edge(frontLayer, 'l')
+    }
+    if (around.right === 'corridor') {
+      edge(frontLayer, 'r')
+    }
+    if (layer <3) {
+      render(
+        frames, maze, layer+2, 
+        maze.getFrontNode({dist: layer/2+1})!
+      )
+    }
   }
 }
 
