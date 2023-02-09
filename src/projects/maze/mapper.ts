@@ -1,5 +1,4 @@
 import { pushPop } from "../../lib/utils";
-import { randomBetween } from "../sk_01/utils";
 import { Direction, Matrix, Maze, NESW } from "./maze";
 
 type GridItem = {
