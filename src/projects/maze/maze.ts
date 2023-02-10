@@ -1,4 +1,4 @@
-import { randomBetween } from "../../lib/utils"
+import { random } from "../../lib/utils"
 
 export type Matrix = Array<Array<Node|null>>
 export type Direction = 'n'|'e'|'s'|'w'
@@ -19,21 +19,32 @@ export const compass = (d: 'r'|'l'|'o', currentDirection: Direction) => {
 export class Maze {
   
   private _matrix: Matrix
-  private _builder: MatrixBuilder
-  current: number[] = [0,0]
-  direction: Direction = 'n'
+  get matrix() {
+    return this._matrix
+  }
+
+  public current: number[] = [0,0]
+  public direction: Direction = 'n'
 
   get currentNode () {
     return this._matrix[this.current[0]][this.current[1]]!
   }
 
+  private builder: MatrixBuilder
+  private director: BuildDirector
+
   constructor(public size:number) {
-    this._builder = new MatrixBuilder(size)
-    this._matrix = this._builder.build()
+    this.builder = new MatrixBuilder(size)
+    this.director = new BuildDirector(this.builder)
+    this.director.buildMatrix(this.current)
+    this._matrix = this.builder.getResult()
   }
 
-  get matrix() {
-    return this._matrix
+  private genFloor() {
+    // might change builder's size,
+    // or fillRate here according to the game's state
+    this.director.buildMatrix(this.current)
+    this._matrix = this.builder.getResult()
   }
 
   turn(d: 'r'|'l') {
@@ -71,85 +82,132 @@ export class Maze {
   }
 }
 
-class MatrixBuilder {
+// Director. Knows what to do based on the current situation.
+class BuildDirector {
+  private builder!: Builder
+  constructor(builder:Builder) {
+    this.setBuilder(builder)
+  }
+  public setBuilder(builder: Builder) {
+    this.builder = builder
+  }
+  public buildMatrix(
+    current: number[],
+    fill = 0.5,
+    conn = 0.5
+  ) {
+    this.builder.setNode(current)
+    this.builder.seedNodes(fill)
+    this.builder.connectNodes(conn)
+  }
+}
+
+interface Builder {
+  reset(): void
+  setNode(pos: number[]): Node
+  seedNodes(fillRate: number): void
+  connectNodes(connRate: number): void
+}
+
+// Concrete Builder
+class MatrixBuilder implements Builder {
+  private matrix!:Matrix
+
   constructor(
     private size = 30,
-    private fill = 0.5
-    // private fill = 0.68
-  ) {}
-
-  gen() {
-    return Math.random() < this.fill
+  ) {
+    this.reset()
   }
 
-  build() {
-    const matrix:Matrix = Array.from(Array(this.size), () => new Array(this.size).fill(null))
+  public getResult() {
+    const matrix = this.matrix
+    this.reset()
+    return matrix
+  }
 
-    // place nodes
-    matrix[0][0] = new Node([0,0])
+  public reset() {
+    this.matrix = Array.from(Array(this.size), () => new Array(this.size).fill(null))
+  }
+
+  public setNode(pos: number[]) {
+    const newNode = new Node(pos)
+    this.matrix[pos[0]][pos[1]] = newNode
+    return newNode
+  }
+
+  public seedNodes(fillRate: number) {
     for (let i = 0; i< this.size; i++) {
       for (let j = 0; j< this.size; j++) {
-        if (this.gen()) {
-          matrix[i][j] = new Node([i,j])
+        if (random(fillRate)) {
+          this.matrix[i][j] = new Node([i,j])
         }
       }
     }
+  }
 
-    const adjacentPos = (d: Direction, i: number,j: number) => {
-      switch(d) {
-        case 'n':
-          return i>0 ? [i-1, j] : [null, null]
-        case 'e':
-          return j<this.size-1 ? [i, j+1] : [null, null]
-        case 's':
-          return i<this.size-1 ? [i+1, j] : [null, null]
-        case 'w':
-          return j>0 ? [i, j-1] : [null, null]
-      }
+  private adjacentPos(d: Direction, i: number,j: number):number[]|null {
+    switch(d) {
+      case 'n':
+        return i>0 ? [i-1, j] : null
+      case 'e':
+        return j<this.size-1 ? [i, j+1] : null
+      case 's':
+        return i<this.size-1 ? [i+1, j] : null
+      case 'w':
+        return j>0 ? [i, j-1] : null
     }
+  }
 
-    // put edges
-    const adjacent = (d: Direction, i: number,j: number) => {
-      switch(d) {
-        case 'n':
-          return i>0 ? matrix[i-1][j] : null
-        case 'e':
-          return j<this.size-1 ? matrix[i][j+1] : null
-        case 's':
-          return i<this.size-1 ? matrix[i+1][j] : null
-        case 'w':
-          return j>0 ? matrix[i][j-1] : null
-      }
+  private adjacentNode(d: Direction, i: number,j: number) {
+    const pos = this.adjacentPos(d,i,j)
+    if (pos) {
+      return this.matrix[pos[0]][pos[1]]
     }
-    const lookAround = (i:number, j: number) => {
-      const around = {} as {[k in Direction]?: boolean}
-      for (const direction of NESW) {
-        if (adjacent(direction, i, j)) {
-          Object.assign(around, {[direction]: true})
-        }
-      }
-      return around
-    }
+  }
 
-    // connect the nodes randomly,
-    // while storing the sets
-    const setArr:Set<Node>[] = []
+  public setEdge(node: Node, d: Direction) {
+    const adj = this.adjacentNode(d, node.pos[0], node.pos[1])
+    if (adj) {
+      node.set({[d]: true})
+      adj.set({[compass('o', d)]: true})
+    }
+    return adj
+  }
+
+  private connectDistantNodes = (n1: Node, n2: Node) => {
+    const dis = n1.distance(n2)
+    const d = n1.direction(n2)
+    const [i, j] = n1.pos
+    const pos = this.adjacentPos(d, i, j)!
+    let adj = this.matrix[pos[0]][pos[1]]
+    if (!adj) {  
+      const [y, x] = pos
+      const newNode = this.setNode([y,x])
+      this.matrix[y][x] = newNode
+      adj = newNode
+    }
+    this.setEdge(n1, d)
+    if (dis !== 1) {
+      this.connectDistantNodes(adj, n2)
+    }
+  }
+
+  public connectNodes(connRate: number) {
+    // connect the nodes randomly, storing the clusters
+    const clusters:Set<Node>[] = []
     for (let i = 0; i< this.size; i++) {
       for (let j = 0; j< this.size; j++) {
-        const node = matrix[i][j]
+        const node = this.matrix[i][j]
         if (node) {
-          const around = lookAround(i,j)
-          const set = setArr.find(set => set.has(node))
-          if (!set) {
-            setArr.push(new Set([node]))
+          const cluster = clusters.find(c => c.has(node))
+          if (!cluster) {
+            clusters.push(new Set([node]))
           }
-          for (const d in around) {
-            if (this.gen()) {
-              node.set({[d]: true})
-              const adj = adjacent(d as Direction, i, j)!
-              adj.set({[compass('o', d as Direction)]: true})
-              if (set && !set.has(adj)) {
-                set.add(adj)
+          for (const d of NESW) {
+            if (random(connRate)) {
+              const adj = this.setEdge(node, d)
+              if (adj && cluster && !cluster.has(adj)) {
+                cluster.add(adj)
               }
             }
           }
@@ -157,76 +215,33 @@ class MatrixBuilder {
       }
     }
 
-    const distance = (n1:Node,n2:Node) => {
-      return Math.abs(n2.pos[0] - n1.pos[0]) + Math.abs(n2.pos[1]- n1.pos[1])
-    }
-
-    const setCon = (s1: Set<Node>, s2: Set<Node>) => {
-      for (const n of s2) {
-        s1.add(n)
-      }
-    }
-
-    const connect = (n1: Node, n2: Node) => {
-      const dis = distance(n1, n2)
-      let d: Direction
-      if (n1.pos[0] < n2.pos[0]) {
-        d = 's'
-      } else if (n1.pos[0] > n2.pos[0]) {
-        d = 'n'
-      } else {
-        if (n1.pos[1] > n2.pos[1]) {
-          d = 'w'
-        } else {
-          d = 'e'
-        }
-      }
-      const [i, j] = n1.pos
-      let next = adjacent(d, i,j)
-      if (!next) {
-        const [y, x] = adjacentPos(d, i, j)
-        if (y===null || x===null) {
-          console.error(d,i,j, y, x)
-          throw Error('adj pos broken')
-        }
-        const newNode = new Node([y,x])
-        matrix[y][x] = newNode
-        next = newNode
-      }
-      n1.set({[d]: true})
-      next.set({[compass('o', d)]: true})
-      if (dis !== 1) {
-        connect(next, n2)
-      }
-    }
-
-    // connecting the islands
-    while(setArr.length !== 1) {
-      const set1 = setArr[0]
-      for (const set2 of setArr.slice(1)) {
-        for (const potential of set2) {
+    // connect the clusters
+    while(clusters.length !== 1) {
+      const cl1 = clusters[0]
+      for (const cl2 of clusters.slice(1)) {
+        for (const cl2Node of cl2) {
           let dis = 1000
-          let shortest:Node|undefined
-          let set1Node:Node|undefined
-          for (const setNode of set1) {
-            const dist = distance(setNode, potential)
+          let startNode:Node|undefined
+          let nearestNode:Node|undefined
+          for (const cl1Node of cl1) {
+            const dist = cl1Node.distance(cl2Node)
             if (dist < dis) {
               dis = dist
-              shortest = potential
-              set1Node = setNode
+              startNode = cl1Node
+              nearestNode = cl2Node
             }
           }
-          if (shortest && set1Node) {
-            connect(set1Node, shortest)
-            setCon(set1, set2)
-            setArr.splice(setArr.findIndex(s => s === set2), 1)
+          if (startNode && nearestNode) {
+            this.connectDistantNodes(startNode, nearestNode)
+            for (const n of cl2) {
+              cl1.add(n)
+            }
+            clusters.splice(clusters.findIndex(s => s === cl2), 1)
           }
         }
       }
-    }
-
-    return matrix
-  } 
+    }    
+  }
 }
 
 type Edges = {
@@ -235,6 +250,9 @@ type Edges = {
 
 export class Node {
   private _edges: Edges
+  get edges() {
+    return this._edges
+  }
 
   constructor(
     public pos: number[],
@@ -248,11 +266,37 @@ export class Node {
     }
   }
 
-  set(edges: {[k in Direction]?: boolean}) {
+  public set(edges: {[k in Direction]?: boolean}) {
     this._edges = Object.assign({...this._edges}, edges) 
   }
 
-  get edges() {
-    return this._edges
+  public distance(other:Node) {
+    return Math.abs(other.pos[0] - this.pos[0]) + Math.abs(other.pos[1]- this.pos[1])
+  }
+
+  public direction(other: Node, prefer: 'ns'|'ew' = 'ns') {
+    let ns, ew
+
+    if (this.pos[0] < other.pos[0]) {
+      ns = 's'
+    } else if (this.pos[0] > other.pos[0]) {
+      ns = 'n'
+    }
+    
+    if (this.pos[1] < other.pos[1]) {
+      ew = 'e'
+    } else if (this.pos[1] > other.pos[1]) {
+      ew = 'w'
+    }
+
+    if (!ns && !ew) {
+      throw Error('directioin must be compared between two different nodes')
+    }
+
+    if (prefer === 'ns') {
+      return (ns || ew) as Direction
+    } else {
+      return (ew || ns) as Direction
+    }
   }
 }

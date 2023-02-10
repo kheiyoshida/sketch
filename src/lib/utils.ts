@@ -45,3 +45,10 @@ export function destVect(
 export function vline(v1:p5.Vector, v2:p5.Vector) {
   p.line(v1.x, v1.y, v2.x, v2.y)
 }
+
+export function random(rate: number) {
+  if (rate > 1 || rate < 0) {
+    throw Error('rate should be between 0.0 and 1.0')
+  }
+  return Math.random() <= rate
+}
