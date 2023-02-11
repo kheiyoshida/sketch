@@ -19,7 +19,7 @@ declare global {
 const sketchFactory = (s: Sketch) => (p:p5) => {
   p.setup = () => s.setup()
   p.draw = () => s.draw()
-  // p.preload = () => (s.preload || p.preload)()
+  p.preload = s.preload || (() => {})
   // p.windowResized = () => (s.windowResized ||  p.windowResized)()
 }
 

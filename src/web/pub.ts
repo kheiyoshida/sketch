@@ -5,9 +5,6 @@ export type PubWork = {
 
 export const published:PubWork[] = [
   {
-    path: 'sd'
-  },
-  {
     path: 'maze'
   },
   {

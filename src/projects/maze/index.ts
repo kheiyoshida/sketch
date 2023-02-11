@@ -1,10 +1,11 @@
 import p5 from "p5"
-import { pushPop } from "../../lib/utils"
 import { randomBetween } from "../sk_01/utils"
 import { renderGUI, renderHelp } from "./gui"
 import { Mapper } from "./mapper"
 import { Maze } from "./maze"
 import { Frame, intervalRender, render, transRender } from "./render"
+import { music } from "./sound"
+import { start as toneStart } from 'tone'
 
 export let bgColor: p5.Color
 export let fill: p5.Color
@@ -14,20 +15,37 @@ const interval = 1000 / fps
 
 let mad = 1
 
+let started = false
+
 const setup = () => {
   [ww, wh] = [p.windowWidth, p.windowHeight]
-  p.createCanvas(ww, wh)
-
+  const c = p.createCanvas(ww, wh)
   bgColor = p.color(0,250)
   p.stroke(200, 200)
   fill = bgColor
+
   p.fill(fill)
   p.background(bgColor)
-  setupMaze()
   p.noLoop()
   p.touchStarted = () => false
   p.touchEnded = () => false
   p.touchMoved = () => false
+
+  p.textSize(32)
+  p.text('TAP/CLICK TO PLAY', 0, 32)
+
+  const fadein = music()
+  const start = () => {
+    if (!started) {
+      started = true
+      setupMaze()
+      toneStart()
+      fadein()
+    }
+  }
+  
+  c.mousePressed(start)
+  c.touchStarted(start)
 }
 
 let mapOpen = false

@@ -11,7 +11,7 @@ const config: Configuration = {
   plugins: [
     new DefinePlugin({
       'process.env.PROJECT': JSON.stringify(process.env.PROJECT)
-   })
+   }),
   ],
   module: {
     rules: [
@@ -25,6 +25,15 @@ const config: Configuration = {
           },
         },
       },
+      {
+        test: /\.js$/,
+        enforce: 'pre',
+        use: ['source-map-loader'],
+      },
+      {
+        test: /\.(wav|mp3)$/,
+        type: 'asset/resource',
+      }
     ]
   },
   resolve: {
