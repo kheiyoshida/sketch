@@ -23,7 +23,7 @@ const pointLine = (p1: number[], p2: number[]) => {
 const framePaint = () => {
   pushPop(() => {
     p.noStroke()
-    p.rect(0, 0, p.windowWidth, p.windowHeight)
+    p.rect(-p.windowWidth, -p.windowHeight, 3 * p.windowWidth, 3 * p.windowHeight)
   })
 }
 
@@ -150,6 +150,7 @@ export const render = (
   frames: Frame[],
   maze: Maze,
   layer = 0,
+  scene = 1,
   node?: Node,
 ) => {
   if (layer === 0) {
@@ -162,7 +163,7 @@ export const render = (
 
   // if the stair appears, it's always just one pattern for rendering. 
   if (currentNode.stair === true) {
-    return renderStair(frontLayer, backLayer, layer===0)
+    return renderStair(frontLayer, backLayer, layer===0, scene)
   }
 
   const direction = maze.direction
@@ -183,14 +184,14 @@ export const render = (
     }
     if (layer <3) {
       render(
-        frames, maze, layer+2, 
+        frames, maze, layer+2, scene,
         maze.getFrontNode({dist: layer/2+1})!
       )
     }
   }
 }
 
-const renderStair = (f: Layer, b: Layer, current: boolean) => {
+const renderStair = (f: Layer, b: Layer, current: boolean, scene: number) => {
   
   // ceiling
   pointLine(f.front.tl, f.back.bl)
@@ -200,12 +201,9 @@ const renderStair = (f: Layer, b: Layer, current: boolean) => {
   // next floor from distance
   if (!current) {
     pointLine(f.front.bl, f.front.br)
-    pushPop(() => {
-      p.stroke(200, 100)
-      pointLine(b.front.bl, [b.front.bl[0], f.front.bl[1]])
-      pointLine(b.front.br, [b.front.br[0], f.front.br[1]])
-    })
-  } 
+    pointLine(b.front.bl, [b.front.bl[0], f.front.bl[1]])
+    pointLine(b.front.br, [b.front.br[0], f.front.br[1]])
+  }
   // next floor when going down
   else {
     const secondFront = assumeSecondFrame(b.front)
@@ -214,9 +212,10 @@ const renderStair = (f: Layer, b: Layer, current: boolean) => {
     pushPop(() => {
       p.stroke(200, 100)
       const secondBack = assumeSecondFrame(b.back)
+      const adjust = p.windowHeight * 0.015 * scene * scene * (scene<5?1.8: 1)
       pointLine(
-        [b.front.bl[0], secondBack.bl[1]],
-        [b.front.br[0], secondBack.br[1]]
+        [b.front.bl[0], secondBack.bl[1]+adjust],
+        [b.front.br[0], secondBack.br[1]+adjust]
       )
     })
   }
@@ -247,10 +246,11 @@ export const intervalRender = (
 export const transRender = (
   frames: Frame[],
   maze: Maze,
-  trans: number
+  trans: number[],
+  scene?: number
 ) => {
   pushPop(() => {
-    p.translate(trans, 0)
-    render(frames, maze)
+    p.translate(trans[0], trans[1])
+    render(frames, maze, 0, scene)
   })
 }

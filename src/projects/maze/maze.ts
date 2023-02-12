@@ -28,8 +28,7 @@ export class Maze {
   public stairPos!: number[]
   public direction: Direction = 's'
   private floor: number = 1
-  public size: number = 5
-
+  public size: number = 12
 
   get currentNode () {
     return this._matrix[this.current[0]][this.current[1]]!

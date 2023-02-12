@@ -1,5 +1,5 @@
 import p5 from "p5"
-import { randomBetween } from "../../lib/utils"
+import { pushPop, randomBetween } from "../../lib/utils"
 import { renderGUI, renderHelp } from "./gui"
 import { Mapper } from "./mapper"
 import { Maze } from "./maze"
@@ -60,12 +60,12 @@ const setupMaze = () => {
 
   const frames = (magnify=1):Frame[] => 
     magnifyRates.map(scale => {
-      const blur = 0.05 * (1 + mad/1000)
-      const r = randomBetween(1-blur,1+blur)
+      // const blur = 0.05 * (1 + mad/1000)
+      // const r = randomBetween(1-blur,1+blur)
       return createFrame(
         [
-          ww*magnify*scale*r,
-          wh*magnify*scale*r
+          ww*magnify*scale,
+          wh*magnify*scale
         ]
       )
     }
@@ -78,11 +78,12 @@ const setupMaze = () => {
     intervalRender(interval, [
       () => render(frames(1.05), maze),
       () => render(frames(1.1), maze),
-      () => render(frames(1.2), maze),
-      () => render(frames(1.3), maze),
-      () => render(frames(1.4), maze),
+      () => render(frames(1.24), maze),
+      () => render(frames(1.33), maze),
       () => render(frames(1.5), maze),
-      () => render(frames(1.6), maze),
+      () => render(frames(1.65), maze),
+      () => render(frames(1.8), maze),
+      () => render(frames(1.9), maze),
       () => {
         const res = maze.navigate()
         if (res) {
@@ -98,20 +99,32 @@ const setupMaze = () => {
 
   const goDownStairs = () => {
     // animate
-
-    // generate next floor
-    maze.goDownStairs()
-    render(frames(1), maze)
-    mapper.reset(maze)
+    intervalRender(interval*3,
+      [
+      () => transRender(frames(1.05),maze, [0, -wh*0.1], 1),
+      () => transRender(frames(1.1),maze, [0, -wh*0.3], 2),
+      () => transRender(frames(1.2),maze, [0, -wh*0.58], 3),
+      () => transRender(frames(1.4),maze, [0, -wh*0.74], 4),
+      () => transRender(frames(1.6),maze, [0, -wh*0.88], 5),
+      () => transRender(frames(1.8),maze, [0, -wh*0.92], 6),
+      // () => transRender(frames(1.9),maze, [0, -wh*0.9], 7),
+      () => {
+        // generate next floor
+        maze.goDownStairs()
+        render(frames(1), maze)
+        mapper.reset(maze)
+      }
+    ]
+    )
   }
 
   const turn = (dir: 'r'|'l') => {
     const d = dir === 'r' ? -1 : 1
     intervalRender(interval, [
-      () => transRender(frames(0.85),maze, d*ww*0.01),
-      () => transRender(frames(0.9),maze, d*ww*0.03),
-      () => transRender(frames(0.95),maze, d*ww*0.08),
-      () => transRender(frames(),maze, d*ww*0.11),
+      () => transRender(frames(0.85),maze, [d*ww*0.01, 0]),
+      () => transRender(frames(0.9),maze, [d*ww*0.03, 0]),
+      () => transRender(frames(0.95),maze, [d*ww*0.08, 0]),
+      () => transRender(frames(),maze, [d*ww*0.11, 0]),
       () => {
         maze.turn(dir)
         render(frames(), maze)

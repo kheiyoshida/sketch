@@ -148,7 +148,6 @@ class GridBuilder {
         }
       }
     }
-    grid[0][0] = {visited: true}
     return grid
   }
 }
