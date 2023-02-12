@@ -1,5 +1,5 @@
 import { pushPop } from "../../lib/utils"
-import { compass, Maze, Node } from "./maze"
+import { compass, Direction, Maze, Node } from "./maze"
 import { img } from "./wall"
 
 export type Frame = {
@@ -130,10 +130,10 @@ type Terrain = {
   front: PathPattern | 'dark'
 }
 
-const lookAround = (maze: Maze, node: Node, far:boolean):Terrain => {
-  const f = node.edges[maze.direction]
-  const l = node.edges[compass('l', maze.direction)]
-  const r = node.edges[compass('r', maze.direction)]
+const lookAround = (d: Direction, node: Node, far:boolean):Terrain => {
+  const f = node.edges[d]
+  const l = node.edges[compass('l', d)]
+  const r = node.edges[compass('r', d)]
   return {
     front: f 
       ? 
@@ -156,9 +156,18 @@ export const render = (
     framePaint()
   }
 
-  const frontLayer = {front: frames[layer], back: frames[layer+1]} 
-  const backLayer = {front: frames[layer+1], back: frames[layer+2]}
-  const around = lookAround(maze, node || maze.currentNode, layer===4)
+  const currentNode = node || maze.currentNode
+  const frontLayer: Layer = {front: frames[layer], back: frames[layer+1]} 
+  const backLayer: Layer = {front: frames[layer+1], back: frames[layer+2]}
+
+  // if the stair appears, it's always just one pattern for rendering. 
+  if (currentNode.stair === true) {
+    return renderStair(frontLayer, backLayer, layer===0)
+  }
+
+  const direction = maze.direction
+  const far = layer === 4
+  const around = lookAround(direction, currentNode, far)
 
   side(frontLayer, 'l', around.left)
   side(frontLayer, 'r', around.right)
@@ -178,6 +187,50 @@ export const render = (
         maze.getFrontNode({dist: layer/2+1})!
       )
     }
+  }
+}
+
+const renderStair = (f: Layer, b: Layer, current: boolean) => {
+  
+  // ceiling
+  pointLine(f.front.tl, f.back.bl)
+  pointLine(f.front.tr, f.back.br)
+  pointLine(f.back.bl, f.back.br)
+  
+  // next floor from distance
+  if (!current) {
+    pointLine(f.front.bl, f.front.br)
+    pushPop(() => {
+      p.stroke(200, 100)
+      pointLine(b.front.bl, [b.front.bl[0], f.front.bl[1]])
+      pointLine(b.front.br, [b.front.br[0], f.front.br[1]])
+    })
+  } 
+  // next floor when going down
+  else {
+    const secondFront = assumeSecondFrame(b.front)
+    pointLine(b.front.bl, secondFront.bl)
+    pointLine(b.front.br, secondFront.br)
+    pushPop(() => {
+      p.stroke(200, 100)
+      const secondBack = assumeSecondFrame(b.back)
+      pointLine(
+        [b.front.bl[0], secondBack.bl[1]],
+        [b.front.br[0], secondBack.br[1]]
+      )
+    })
+  }
+}
+
+// helper. move this somehwere
+const assumeSecondFrame = (f: Frame):Frame => {
+  const frameHeight = f.bl[1] - f.tl[1]
+  const secondFrameBottom = f.bl[1] + frameHeight
+  return {
+    tl: f.bl,
+    tr: f.br,
+    bl: [f.bl[0], secondFrameBottom],
+    br: [f.br[0], secondFrameBottom]
   }
 }
 

@@ -16,6 +16,10 @@ export class Mapper {
     this.grid = this.builder.build(maze.matrix, maze.size)
   }
 
+  public reset(maze: Maze) {
+    this.grid = this.builder.build(maze.matrix, maze.size)
+  }
+
   public track({from, dest}: {from: number[], dest: number[]}) {
     const [gi, gj] = [dest[0]*2, dest[1]*2]
     this.grid[gi][gj]!.visited = true

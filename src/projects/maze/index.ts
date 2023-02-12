@@ -1,5 +1,5 @@
 import p5 from "p5"
-import { randomBetween } from "../sk_01/utils"
+import { randomBetween } from "../../lib/utils"
 import { renderGUI, renderHelp } from "./gui"
 import { Mapper } from "./mapper"
 import { Maze } from "./maze"
@@ -51,20 +51,25 @@ const setup = () => {
 let mapOpen = false
 
 const setupMaze = () => {
-  const maze = new Maze(20)
+  const maze = new Maze()
   const mapper = new Mapper(maze)
 
-  const frames = (magnify=1):Frame[] => [
+  const magnifyRates = [
     1, 0.7, 0.3, 0.2, 0.09, 0.04, 0.02
-  ].map(scale => {
-    const blur = 0.05 * (1 + mad/1000)
-    const r = randomBetween(1-blur,1+blur)
-    return createFrame(
-      [
-        ww*magnify*scale*r,
-        wh*magnify*scale*r
-      ]
-    )})
+  ]
+
+  const frames = (magnify=1):Frame[] => 
+    magnifyRates.map(scale => {
+      const blur = 0.05 * (1 + mad/1000)
+      const r = randomBetween(1-blur,1+blur)
+      return createFrame(
+        [
+          ww*magnify*scale*r,
+          wh*magnify*scale*r
+        ]
+      )
+    }
+  )
 
   render(frames(1), maze)
   
@@ -84,9 +89,20 @@ const setupMaze = () => {
           mapper.track(res)
         }
         render(frames(1), maze)
+        if (maze.reachedStair) {
+          goDownStairs()
+        }
       }
     ])
-    mad += 1
+  }
+
+  const goDownStairs = () => {
+    // animate
+
+    // generate next floor
+    maze.goDownStairs()
+    render(frames(1), maze)
+    mapper.reset(maze)
   }
 
   const turn = (dir: 'r'|'l') => {

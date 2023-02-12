@@ -23,6 +23,13 @@ export const randomBetween = (min: number, max: number) => {
   return (max - min) * ratio + min
 }
 
+/**
+ * note: not inclusive for max value
+ */
+export const randomIntBetween = (min: number, max: number) => {
+  return Math.floor(randomBetween(min, max))
+}
+
 export function randomColor() {
   const [c1, c2, c3] = Array(3).fill(0).map( (_) => randomBetween(0, 255))
   return p.color(c1, c2, c3)

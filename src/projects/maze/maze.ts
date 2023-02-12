@@ -1,4 +1,4 @@
-import { random } from "../../lib/utils"
+import { random, randomIntBetween } from "../../lib/utils"
 
 export type Matrix = Array<Array<Node|null>>
 export type Direction = 'n'|'e'|'s'|'w'
@@ -18,13 +18,18 @@ export const compass = (d: 'r'|'l'|'o', currentDirection: Direction) => {
 
 export class Maze {
   
-  private _matrix: Matrix
+  private _matrix!: Matrix
   get matrix() {
     return this._matrix
   }
 
-  public current: number[] = [0,0]
-  public direction: Direction = 'n'
+  // should be read-only. fix later
+  public current!: number[]
+  public stairPos!: number[]
+  public direction: Direction = 's'
+  private floor: number = 1
+  public size: number = 5
+
 
   get currentNode () {
     return this._matrix[this.current[0]][this.current[1]]!
@@ -33,25 +38,28 @@ export class Maze {
   private builder: MatrixBuilder
   private director: BuildDirector
 
-  constructor(public size:number) {
-    this.builder = new MatrixBuilder(size)
+  constructor() {
+    this.builder = new MatrixBuilder(this.size)
     this.director = new BuildDirector(this.builder)
-    this.director.buildMatrix(this.current)
-    this._matrix = this.builder.getResult()
+    this.generate()
   }
 
-  private genFloor() {
-    // might change builder's size,
-    // or fillRate here according to the game's state
-    this.director.buildMatrix(this.current)
-    this._matrix = this.builder.getResult()
+  private generate() {
+    this.director.buildMatrix()
+    const {
+      matrix, initialPos, initialDir, stairPos
+    } = this.builder.getResult()
+    this._matrix = matrix
+    this.current = initialPos
+    this.direction = initialDir
+    this.stairPos = stairPos
   }
 
-  turn(d: 'r'|'l') {
+  public turn(d: 'r'|'l') {
     this.direction = compass(d, this.direction)
   }
 
-  getFrontLoc(dist=1) {
+  public getFrontLoc(dist=1) {
     switch(this.direction) {
       case 'n':
         return [this.current[0]-dist, this.current[1]]
@@ -64,7 +72,7 @@ export class Maze {
     }
   }
 
-  getFrontNode({dist}:{dist:number}={dist:1}) {
+  public getFrontNode({dist}:{dist:number}={dist:1}) {
     const l = this.getFrontLoc(dist)
     return this._matrix[l[0]][l[1]]
   }
@@ -73,12 +81,22 @@ export class Maze {
     return this.currentNode!.edges[this.direction]
   }
   
-  navigate() {
+  public navigate() {
     if (this.canProceed) {
       const from = this.current
       this.current = this.getFrontLoc()
       return {from, dest: this.current}
     }
+  }
+
+  get reachedStair() {
+    return this.current[0] === this.stairPos[0] 
+      && this.current[1] === this.stairPos[1]
+  }
+
+  public goDownStairs() {
+    this.floor += 1
+    this.generate()
   }
 }
 
@@ -92,13 +110,14 @@ class BuildDirector {
     this.builder = builder
   }
   public buildMatrix(
-    current: number[],
+    floor = 1,
     fill = 0.5,
     conn = 0.5
   ) {
-    this.builder.setNode(current)
     this.builder.seedNodes(fill)
     this.builder.connectNodes(conn)
+    this.builder.determineInitialPos()
+    this.builder.setStair()
   }
 }
 
@@ -107,11 +126,15 @@ interface Builder {
   setNode(pos: number[]): Node
   seedNodes(fillRate: number): void
   connectNodes(connRate: number): void
+  determineInitialPos(): void
+  setStair(): void
 }
 
 // Concrete Builder
 class MatrixBuilder implements Builder {
   private matrix!:Matrix
+  private initialPos: number[]|undefined
+  private stairPos: number[]|undefined
 
   constructor(
     private size = 30,
@@ -122,7 +145,20 @@ class MatrixBuilder implements Builder {
   public getResult() {
     const matrix = this.matrix
     this.reset()
-    return matrix
+    if (!this.initialPos) {
+      throw Error('initial position is not set')
+    }
+    if (!this.stairPos) {
+      throw Error('stair position is not set')
+    }
+    const initialNode = matrix[this.initialPos[0]][this.initialPos[1]]!
+    const direction = compass(random(0.5) ? 'r' : 'l', initialNode.corridorDirection!)
+    return {
+      matrix, 
+      initialPos: this.initialPos, 
+      initialDir: direction,
+      stairPos: this.stairPos
+    }
   }
 
   public reset() {
@@ -242,6 +278,42 @@ class MatrixBuilder implements Builder {
       }
     }    
   }
+
+  public determineInitialPos() {
+    const corridors = []
+    for (let i = 0; i< this.size; i++) {
+      for (let j = 0; j< this.size; j++) {
+        const node = this.matrix[i][j]
+        if (node && node.isCorridor) {
+          corridors.push(node)
+        }
+      }
+    }
+    if (!corridors.length) {
+      throw Error('no corridors')
+    }
+    const initial = corridors[randomIntBetween(0, corridors.length)]
+    this.initialPos = initial.pos
+  }
+
+  public setStair() {
+    const deadEnds = []
+    for (let i = 0; i< this.size; i++) {
+      for (let j = 0; j< this.size; j++) {
+        const node = this.matrix[i][j]
+        if (node && node.isDeadEnd) {
+          deadEnds.push(node)
+        }
+      }
+    }
+    if (!deadEnds.length) {
+      // possible when there are few nodes placed. fix later.
+      throw Error('no dead ends')
+    }
+    const staierNode = deadEnds[randomIntBetween(0, deadEnds.length)]
+    staierNode.setStair()
+    this.stairPos = staierNode.pos
+  }
 }
 
 type Edges = {
@@ -268,6 +340,36 @@ export class Node {
 
   public set(edges: {[k in Direction]?: boolean}) {
     this._edges = Object.assign({...this._edges}, edges) 
+  }
+
+  private _stair: boolean = false
+  public get stair() {
+    return this._stair
+  }
+
+  public setStair() {
+    this._stair = true
+  }
+
+  get isDeadEnd() {
+    return Object.values(this._edges)
+      .filter(v => v===true).length === 1
+  }
+
+  get corridorDirection(): Direction|undefined {
+    if (this._edges.e) {
+      if (this._edges.w && !this._edges.n && !this._edges.s) {
+        return 'e'
+      }
+    } else if (this._edges.n) {
+      if (this._edges.s && !this._edges.w && !this._edges.e) {
+        return 'n'
+      }
+    }
+  }
+
+  get isCorridor() {
+    return Boolean(this.corridorDirection)
   }
 
   public distance(other:Node) {
