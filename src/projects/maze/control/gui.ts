@@ -1,4 +1,4 @@
-import { pushPop } from "../../lib/utils"
+import { pushPop } from "../../../lib/utils"
 
 const btnFac = (base: number) => (
   text: string, x: number, y: number
