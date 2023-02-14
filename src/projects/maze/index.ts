@@ -11,7 +11,7 @@ const setup = () => {
   const c = p.createCanvas(Conf.ww, Conf.wh)
   p.stroke(Conf.colors.stroke)
   p.fill(Conf.colors.fill)
-  p.background(Conf.colors.bg)
+  p.background(Conf.colors.fill)
   p.noLoop()
   p.touchStarted = () => false
   p.touchEnded = () => false
@@ -30,7 +30,7 @@ const setup = () => {
     }
   }
   
-  start()
+  // start()
   c.mousePressed(start)
   c.touchStarted(start)
 }

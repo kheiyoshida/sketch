@@ -1,4 +1,4 @@
-import { Conf } from "../config"
+import { Conf, fillTrans, setColors } from "../config"
 import { Mapper } from "../core/mapper"
 import { Maze } from "../core/maze"
 import { frames } from "../render/frame"
@@ -53,10 +53,10 @@ export class Control {
     goDownStairsMove(
       this.maze, 
       () => {
+        fillTrans(this.maze.floor * 1)
         this.maze.goDownStairs()
         this.renderCurrentView()
         this.mapper.reset(this.maze)
-        this.callMap()
       }
     )
   }

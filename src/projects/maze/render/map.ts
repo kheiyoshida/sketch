@@ -48,8 +48,8 @@ export const renderMap = (
   
   for (let i = 0; i<gridL; i++) {
     for (let j = 0; j<gridL; j++) {
-      const itm = grid[i][j]
-      if (itm && itm) {
+      const cell = grid[i][j]
+      if (cell && cell.visited) {
         p.fill(100, 200)
         const [ie, je] = [i%2===0, j%2===0]
         // node

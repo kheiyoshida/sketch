@@ -120,7 +120,7 @@ class BuildDirector {
         retry > 1 ? {fs: retry*1, fill: retry * 0.05} : undefined
       )
     } catch (e) {
-      if (e instanceof BuildError && retry < 7) {
+      if (e instanceof BuildError && retry < 20) {
         this.buildMatrix(floor, retry+1)
       } else {
         console.error(e)
@@ -133,7 +133,7 @@ class BuildDirector {
     adjust?: {[k in 'fs'|'fill']: number}
   ) {
     const fs = floorSize(floor) + (adjust ? adjust.fs : 0)
-    const fill = fillRate(floor) + (adjust ? adjust.fill : 0)
+    const fill = Math.min(0.88, fillRate(floor) + (adjust ? adjust.fill : 0)) 
     const conn = connRate(floor)
     this.builder.reset(fs)
     this.builder.seedNodes(fill)
