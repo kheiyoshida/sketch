@@ -1,7 +1,7 @@
 import { pushPop } from "../../../lib/utils"
 import { Maze, Node } from "../core/maze"
 import { compass, Direction } from '../core/direction'
-import { Frame, Layer } from "./frame"
+import { extractLayer, Frame, Layer } from "./frame"
 import { dark, edge, framePaint, front, side } from "./draw"
 import { renderStair } from "./scene"
 
@@ -33,7 +33,6 @@ export const render = (
   frames: Frame[],
   maze: Maze,
   layer = 0,
-  scene = 1,
   node?: Node,
 ) => {
   if (layer === 0) {
@@ -41,12 +40,13 @@ export const render = (
   }
 
   const currentNode = node || maze.currentNode
-  const frontLayer: Layer = {front: frames[layer], back: frames[layer+1]} 
-  const backLayer: Layer = {front: frames[layer+1], back: frames[layer+2]}
+  // const frontLayer: Layer = {front: frames[layer], back: frames[layer+1]} 
+  // const backLayer: Layer = {front: frames[layer+1], back: frames[layer+2]}
+  const { frontLayer, backLayer } = extractLayer(frames, layer)
 
   // if the stair appears, it's always just one pattern for rendering. 
   if (currentNode.stair === true) {
-    return renderStair(frontLayer, backLayer, layer===0, scene)
+    return renderStair(frontLayer, backLayer, layer===0)
   }
   
   const direction = maze.direction
@@ -67,7 +67,7 @@ export const render = (
     }
     if (layer <3) {
       render(
-        frames, maze, layer+2, scene,
+        frames, maze, layer+2,
         maze.getFrontNode({dist: layer/2+1})!
       )
     }
@@ -77,11 +77,16 @@ export const render = (
 export const intervalRender = (
   interval: number,
   renSeq: Array<VoidFunction>,
-  after?: VoidFunction
+  after?: VoidFunction,
 ) => {
   for(let i = 0; i<renSeq.length; i++) {
     const ren = renSeq[i]
-    setTimeout(ren, (i+1) * interval)
+    setTimeout(
+      () => {
+        // console.log(i)
+        ren()
+      }
+      , (i+1) * interval)
   }
   if (after) {
     setTimeout(after, (renSeq.length+1) * interval)
@@ -92,10 +97,10 @@ export const transRender = (
   frames: Frame[],
   maze: Maze,
   trans: number[],
-  scene?: number
 ) => {
+  framePaint()
   pushPop(() => {
     p.translate(trans[0], trans[1])
-    render(frames, maze, 0, scene)
+    render(frames, maze, 0)
   })
 }

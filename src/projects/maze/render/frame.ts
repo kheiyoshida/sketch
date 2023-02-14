@@ -25,8 +25,11 @@ const createFrame = (rectWH: number[]):Frame => {
   }
 }
 
-export const frames = (magnify=1):Frame[] =>  
-  Conf.magnifyRates.map(scale => {
+export const frames = (
+  magnify: number,
+  rates = Conf.magnifyRates
+):Frame[] =>  
+  rates.map(scale => {
     return createFrame(
       [
         Conf.ww*magnify*scale,
@@ -35,6 +38,35 @@ export const frames = (magnify=1):Frame[] =>
     )
   }
 )
+
+export const extractLayer = (frames: Frame[], layer: number) => {
+  const frontLayer: Layer = {front: frames[layer], back: frames[layer+1]} 
+  const backLayer: Layer = {front: frames[layer+1], back: frames[layer+2]}
+  return {
+    frontLayer,
+    backLayer
+  }
+}
+
+export const heightDownFrame = (f: Frame, downRate: number): Frame => {
+  const down = downRate * (f.bl[1] - f.tl[1])
+  return {
+    tl: [f.tl[0], f.tl[1]+down],
+    tr: [f.br[0], f.bl[1]+down],
+    bl: [f.bl[0], f.bl[1]+down],
+    br: [f.br[0], f.br[1]+down]
+  }
+}
+
+export const widenFrame = (f: Frame, rate: number): Frame => {
+  const add = (f.tr[0] - f.tl[0]) * rate * 0.5
+  return {
+    tl: [f.tl[0]-add, f.tl[1]],
+    tr: [f.br[0]+add, f.bl[1]],
+    bl: [f.bl[0]-add, f.bl[1]],
+    br: [f.br[0]+add, f.br[1]]
+  }
+}
 
 export const assumeSecondFrame = (f: Frame):Frame => {
   const frameHeight = f.bl[1] - f.tl[1]

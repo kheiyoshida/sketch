@@ -1,38 +1,54 @@
 import { pushPop } from "../../../lib/utils"
-import { pointLine } from "./draw"
-import { assumeSecondFrame, Layer } from "./frame"
+import { front, pointLine, side } from "./draw"
+import { assumeSecondFrame, extractLayer, Frame, heightDownFrame, Layer, widenFrame } from "./frame"
 
 export const renderStair = (
   f: Layer, 
   b: Layer, 
   current: boolean, 
-  scene: number
 ) => {
-  
+
+  const downRate = 0.12
+  const lilCloser = widenFrame(b.front, -0.5)
+  const hdFrontBack = heightDownFrame(lilCloser, downRate)
+    
   // ceiling
-  pointLine(f.front.tl, f.back.bl)
-  pointLine(f.front.tr, f.back.br)
-  pointLine(f.back.bl, f.back.br)
-  
+  pointLine(f.front.tl, hdFrontBack.bl)
+  pointLine(f.front.tr, hdFrontBack.br)
+
+  pointLine(
+    hdFrontBack.bl, hdFrontBack.br
+  )
+
   // next floor from distance
   if (!current) {
     pointLine(f.front.bl, f.front.br)
-    pointLine(b.front.bl, [b.front.bl[0], f.front.bl[1]])
-    pointLine(b.front.br, [b.front.br[0], f.front.br[1]])
+    pointLine(hdFrontBack.bl, [hdFrontBack.bl[0], f.front.bl[1]])
+    pointLine(hdFrontBack.br, [hdFrontBack.br[0], f.front.br[1]])
   }
   // next floor when going down
   else {
-    const secondFront = assumeSecondFrame(b.front)
-    pointLine(b.front.bl, secondFront.bl)
-    pointLine(b.front.br, secondFront.br)
+    const secondFront = assumeSecondFrame(hdFrontBack)
     pushPop(() => {
-      p.stroke(200, 100)
-      const secondBack = assumeSecondFrame(b.back)
-      const adjust = p.windowHeight * 0.015 * scene * scene * (scene<5?1.8: 1)
-      pointLine(
-        [b.front.bl[0], secondBack.bl[1]+adjust],
-        [b.front.br[0], secondBack.br[1]+adjust]
-      )
+      // p.stroke(200,0,0)
+      pointLine(hdFrontBack.bl, secondFront.bl)
+      pointLine(hdFrontBack.br, secondFront.br)
+      pointLine(f.front.bl, secondFront.bl)
+      pointLine(f.front.br, secondFront.br)
+      pointLine(secondFront.bl, secondFront.br)
     })
   }
+}
+
+export const renderCorridorToNextFloor = (
+  frames: Frame[]
+) => {
+  const { frontLayer: f1, backLayer: b1 } = extractLayer(frames, 0)
+  side(f1, 'l', 'wall')
+  side(f1, 'r', 'wall')
+  front(b1, 'corridor')
+  const { frontLayer: f2, backLayer: b2 } = extractLayer(frames, 2)
+  side(f2, 'l', 'corridor')
+  side(f2, 'r', 'corridor')
+  front(b2, 'wall')
 }

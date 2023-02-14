@@ -29,8 +29,7 @@ const setup = () => {
       fadein()
     }
   }
-  
-  // start()
+
   c.mousePressed(start)
   c.touchStarted(start)
 }

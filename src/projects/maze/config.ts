@@ -1,5 +1,4 @@
 import p5 from "p5"
-import { randomBetween } from "../sk_01/utils"
 
 const colors: {[k: string]: p5.Color} = {}
 
@@ -38,9 +37,13 @@ export const setColors = (conf: {[k: string]: p5.Color}) => {
   updateColors()
 }
 
+/**
+ * increment alpha value of the current fill color.
+ * @param val increment value to alpha
+ */
 export const fillTrans = (val: number) => {
   const c = Conf.colors.fill
-  c.setAlpha(250 - val)
+  c.setAlpha(p.alpha(c) - val)
   updateColors()
 }
 

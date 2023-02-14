@@ -53,7 +53,7 @@ export class Control {
     goDownStairsMove(
       this.maze, 
       () => {
-        fillTrans(this.maze.floor * 1)
+        fillTrans(this.maze.floor * 0.3)
         this.maze.goDownStairs()
         this.renderCurrentView()
         this.mapper.reset(this.maze)

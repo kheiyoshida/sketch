@@ -59,3 +59,12 @@ export function random(rate: number) {
   }
   return Math.random() <= rate
 }
+
+export function colorCopy(color: p5.Color) {
+  return p.color(
+    p.red(color),
+    p.green(color),
+    p.blue(color),
+    p.alpha(color)
+  )
+}
