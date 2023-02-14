@@ -56,6 +56,7 @@ export class Control {
         this.maze.goDownStairs()
         this.renderCurrentView()
         this.mapper.reset(this.maze)
+        this.callMap()
       }
     )
   }

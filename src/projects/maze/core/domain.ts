@@ -19,7 +19,7 @@ export const floorSize = (floor: number): number => {
   }
 }
 
-const DEFAULT_FILL_RATE = 0.5
+const DEFAULT_FILL_RATE = 0.44
 
 /**
  * the deeprer the player goes down, 
@@ -35,9 +35,9 @@ export const fillRate = (floor: number) => {
   }
   if (floor < 5) {
     const min = {
-      1: 0.2,
-      2: 0.33,
-      3: 0.38,
+      1: 0.1,
+      2: 0.24,
+      3: 0.30,
       4: 0.42
     }[floor]!
     return randomBetween(min, min+0.2)

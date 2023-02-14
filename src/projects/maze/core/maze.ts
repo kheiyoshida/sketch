@@ -11,10 +11,20 @@ export class Maze {
     return this._matrix
   }
 
-  // should be read-only. fix later
-  public current!: number[]
-  public stairPos!: number[]
-  public direction: Direction = 's'
+  private _current!: number[]
+  get current() {
+    return this._current
+  }
+
+  private _stairPos!: number[]
+  get stairPos() {
+    return this._stairPos
+  }
+
+  public _direction: Direction = 's'
+  get direction() {
+    return this._direction
+  }
 
   get currentNode () {
     return this._matrix[this.current[0]][this.current[1]]!
@@ -44,13 +54,13 @@ export class Maze {
       matrix, initialPos, initialDir, stairPos
     } = this.builder.getResult()
     this._matrix = matrix
-    this.current = initialPos
-    this.direction = initialDir
-    this.stairPos = stairPos
+    this._current = initialPos
+    this._direction = initialDir
+    this._stairPos = stairPos
   }
 
   public turn(d: 'r'|'l') {
-    this.direction = compass(d, this.direction)
+    this._direction = compass(d, this.direction)
   }
 
   public getFrontLoc(dist=1) {
@@ -78,7 +88,7 @@ export class Maze {
   public navigate() {
     if (this.canProceed) {
       const from = this.current
-      this.current = this.getFrontLoc()
+      this._current = this.getFrontLoc()
       return {from, dest: this.current}
     }
   }
@@ -103,9 +113,27 @@ class BuildDirector {
   public setBuilder(builder: Builder) {
     this.builder = builder
   }
-  public buildMatrix(floor: number) {
-    const fs = floorSize(floor)
-    const fill = fillRate(floor)
+  public buildMatrix(floor: number, retry = 0) {
+    try {
+      this._buildMatrix(
+        floor, 
+        retry > 1 ? {fs: retry*1, fill: retry * 0.05} : undefined
+      )
+    } catch (e) {
+      if (e instanceof BuildError && retry < 7) {
+        this.buildMatrix(floor, retry+1)
+      } else {
+        console.error(e)
+        throw Error('exceeded max retry times')
+      }
+    }
+  }
+  private _buildMatrix(
+    floor: number, 
+    adjust?: {[k in 'fs'|'fill']: number}
+  ) {
+    const fs = floorSize(floor) + (adjust ? adjust.fs : 0)
+    const fill = fillRate(floor) + (adjust ? adjust.fill : 0)
     const conn = connRate(floor)
     this.builder.reset(fs)
     this.builder.seedNodes(fill)
@@ -122,6 +150,12 @@ interface Builder {
   connectNodes(connRate: number): void
   determineInitialPos(): void
   setStair(): void
+}
+
+class BuildError extends Error {
+  constructor(public type: 'no-deadend'|'no-corridor') {
+    super()
+  }
 }
 
 // Concrete Builder
@@ -173,12 +207,29 @@ class MatrixBuilder implements Builder {
     return newNode
   }
 
-  public seedNodes(fillRate: number) {
+  public seedNodes(
+    fillRate: number, 
+    maxNodes = 100,
+    nodes?: number,
+    retry?: number
+  ) {
+    let numOfNodes = nodes || 0
     for (let i = 0; i< this.size; i++) {
       for (let j = 0; j< this.size; j++) {
         if (random(fillRate)) {
-          this.matrix[i][j] = new Node([i,j])
+          numOfNodes += 1
+          if (numOfNodes < maxNodes) {
+            this.matrix[i][j] = new Node([i,j])
+          } else {
+            break
+          }
         }
+      }
+    }
+    if (numOfNodes < 2) {
+      this.seedNodes(fillRate+0.05, maxNodes, numOfNodes)
+      if (retry && retry > 5) {
+        throw Error("matrix couldn't be filled enough. consider setting higher fillRate")
       }
     }
   }
@@ -253,8 +304,14 @@ class MatrixBuilder implements Builder {
       }
     }
 
+    let i = 0
+
     // connect the clusters
     while(clusters.length !== 1) {
+      i += 1 
+      if (i > 300) {
+        throw Error('exceeded max loop')
+      }
       const cl1 = clusters[0]
       for (const cl2 of clusters.slice(1)) {
         for (const cl2Node of cl2) {
@@ -292,7 +349,7 @@ class MatrixBuilder implements Builder {
       }
     }
     if (!corridors.length) {
-      throw Error('no corridors')
+      throw new BuildError('no-corridor')
     }
     const initial = corridors[randomIntBetween(0, corridors.length)]
     this.initialPos = initial.pos
@@ -309,8 +366,7 @@ class MatrixBuilder implements Builder {
       }
     }
     if (!deadEnds.length) {
-      // possible when there are few nodes placed. fix later.
-      throw Error('no dead ends')
+      throw new BuildError('no-deadend')
     }
     const staierNode = deadEnds[randomIntBetween(0, deadEnds.length)]
     staierNode.setStair()
