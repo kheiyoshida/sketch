@@ -6,7 +6,8 @@ import { Grid } from "../core/mapper"
 export const renderMap = (
   grid: Grid,
   current: number[], 
-  direction: Direction
+  direction: Direction,
+  floor: number
 ) => {
 
   const [ci, cj] = [
@@ -22,6 +23,9 @@ export const renderMap = (
     (Conf.ww- max) / 2,
     (Conf.wh - max) / 2
   ]
+
+  // show floor on the left top of the map
+  p.text(`B${floor}F`, pos[0], pos[1])
   
   // calc sizings
   const gridL = grid.length

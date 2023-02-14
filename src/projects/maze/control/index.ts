@@ -77,9 +77,9 @@ export class Control {
       renderMap(
         this.mapper.grid,
         this.maze.current,
-        this.maze.direction
+        this.maze.direction,
+        this.maze.floor,
       )
-      // this.mapper.open(this.maze.current, this.maze.direction)
       this.mapOpen = true
     } else {
       this.renderCurrentView()

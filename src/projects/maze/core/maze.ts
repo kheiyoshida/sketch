@@ -1,5 +1,6 @@
 import { random, randomIntBetween } from "../../../lib/utils"
 import { compass, Direction, NESW } from "./direction"
+import { connRate, INITIAL_FLOOR_SIZE, fillRate, floorSize } from "./domain"
 
 export type Matrix = Array<Array<Node|null>>
 
@@ -14,24 +15,31 @@ export class Maze {
   public current!: number[]
   public stairPos!: number[]
   public direction: Direction = 's'
-  private floor: number = 1
-  public size: number = 12
 
   get currentNode () {
     return this._matrix[this.current[0]][this.current[1]]!
+  }
+
+  private _floor: number = 1
+  get floor() {
+    return this._floor
+  }
+
+  get size() {
+    return this.builder.size
   }
 
   private builder: MatrixBuilder
   private director: BuildDirector
 
   constructor() {
-    this.builder = new MatrixBuilder(this.size)
+    this.builder = new MatrixBuilder()
     this.director = new BuildDirector(this.builder)
     this.generate()
   }
 
   private generate() {
-    this.director.buildMatrix()
+    this.director.buildMatrix(this.floor)
     const {
       matrix, initialPos, initialDir, stairPos
     } = this.builder.getResult()
@@ -81,7 +89,7 @@ export class Maze {
   }
 
   public goDownStairs() {
-    this.floor += 1
+    this._floor += 1
     this.generate()
   }
 }
@@ -95,11 +103,11 @@ class BuildDirector {
   public setBuilder(builder: Builder) {
     this.builder = builder
   }
-  public buildMatrix(
-    floor = 1,
-    fill = 0.5,
-    conn = 0.5
-  ) {
+  public buildMatrix(floor: number) {
+    const fs = floorSize(floor)
+    const fill = fillRate(floor)
+    const conn = connRate(floor)
+    this.builder.reset(fs)
     this.builder.seedNodes(fill)
     this.builder.connectNodes(conn)
     this.builder.determineInitialPos()
@@ -108,7 +116,7 @@ class BuildDirector {
 }
 
 interface Builder {
-  reset(): void
+  reset(size:number): void
   setNode(pos: number[]): Node
   seedNodes(fillRate: number): void
   connectNodes(connRate: number): void
@@ -122,15 +130,20 @@ class MatrixBuilder implements Builder {
   private initialPos: number[]|undefined
   private stairPos: number[]|undefined
 
-  constructor(
-    private size = 30,
-  ) {
-    this.reset()
+  private _size!: number
+  private setSize(size: number) {
+    this._size = size
+  }
+  get size() {
+    return this._size
+  }
+
+  constructor() {
+    this.reset(INITIAL_FLOOR_SIZE)
   }
 
   public getResult() {
     const matrix = this.matrix
-    this.reset()
     if (!this.initialPos) {
       throw Error('initial position is not set')
     }
@@ -147,8 +160,11 @@ class MatrixBuilder implements Builder {
     }
   }
 
-  public reset() {
-    this.matrix = Array.from(Array(this.size), () => new Array(this.size).fill(null))
+  public reset(size: number) {
+    this.setSize(size)
+    this.matrix = Array.from(
+      Array(this.size), () => new Array(this.size).fill(null)
+    )
   }
 
   public setNode(pos: number[]) {
