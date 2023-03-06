@@ -3,6 +3,7 @@ import { music } from "./sound"
 import { start as toneStart } from 'tone'
 import { Conf, initConf } from "./config"
 import { bindControl, Control } from "./control"
+import { putPicture, img } from "./render/wall"
 
 let started = false
 
@@ -29,6 +30,8 @@ const setup = () => {
       fadein()
     }
   }
+
+  putPicture([0,0], [1000,800])
 
   c.mousePressed(start)
   c.touchStarted(start)

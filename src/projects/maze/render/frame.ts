@@ -48,6 +48,13 @@ export const extractLayer = (frames: Frame[], layer: number) => {
   }
 }
 
+export const frameWidthAndHeight = (f: Frame) => {
+  return [
+    (f.tr[0]-f.tl[0]),
+    (f.bl[1]-f.tl[1])
+  ]
+}
+
 export const heightDownFrame = (f: Frame, downRate: number): Frame => {
   const down = downRate * (f.bl[1] - f.tl[1])
   return {

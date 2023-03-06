@@ -1,7 +1,8 @@
 import { pushPop } from "../../../lib/utils"
-import { Layer } from "./frame"
+import { Layer, frameWidthAndHeight } from "./frame"
 import { PathPattern, Terrain } from "."
-import { img } from "./wall"
+import { img, putPicture } from "./wall"
+import { Conf } from "../config"
 
 export const pointLine = (p1: number[], p2: number[]) => {
   p.line(p1[0], p1[1], p2[0], p2[1])
@@ -55,13 +56,13 @@ export const front = (
     pointLine(l.front.tr, l.back.tr)
     pointLine(l.front.bl, l.back.bl)
     pointLine(l.front.br, l.back.br)
+    const [w,h] = frameWidthAndHeight(l.back)
     pushPop(() => {
       p.fill(10, 0.2)
       p.noStroke()
       p.rect(
         l.back.tl[0], l.back.tl[1],
-        (l.back.tr[0]-l.back.tl[0]), 
-        (l.back.bl[1]-l.back.tl[1])
+        w,h,
       )
     })
   }
@@ -78,34 +79,33 @@ export const edge = (
   }
 }
 
-export const dark = (
+export const isDeadEnd = (a: Terrain) => {
+  return a.front === 'wall' &&
+    a.front === a.right && 
+    a.right === a.left
+}
+
+export const deadEnd = (
   l: Layer,
-  a: Terrain
+  close: boolean
 ) => {
-  if (
-    a.left === a.right && 
-    a.right === a.front && 
-    a.front === 'wall'
-  ) {
+  const [w, h] = frameWidthAndHeight(l.back)
+  if (close) {
+    putPicture(
+      l.back.tl,
+      [w,h]
+    )
+  } else {
     pushPop(() => {
       p.noStroke()
-      p.fill(0,100)
+      p.fill(Conf.colors.wallPicture)
       p.rect(
-        l.front.tl[0], l.front.tl[1],
-        (l.front.tr[0]-l.front.tl[0]), 
-        (l.front.bl[1]-l.front.tl[1])
-      )
-      p.fill(20)
-      p.rect(
-        l.back.tl[0],
-        l.back.tl[1],
-        (l.back.tr[0]-l.back.tl[0]),
-        (l.back.bl[1]-l.back.tl[1])
+        l.back.tl[0], l.back.tl[1],
+        w,h
       )
       img(
         l.back.tl,
-        [(l.back.tr[0]-l.back.tl[0]),
-        (l.back.bl[1]-l.back.tl[1])],
+        [w,h]
       )
     })
   }

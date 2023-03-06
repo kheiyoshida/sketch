@@ -1,8 +1,8 @@
 import { pushPop } from "../../../lib/utils"
 import { Maze, Node } from "../core/maze"
 import { compass, Direction } from '../core/direction'
-import { extractLayer, Frame, Layer } from "./frame"
-import { dark, edge, framePaint, front, side } from "./draw"
+import { extractLayer, Frame } from "./frame"
+import { deadEnd, edge, framePaint, front, isDeadEnd, side } from "./draw"
 import { renderStair } from "./scene"
 
 export type PathPattern = 'wall'|'corridor'
@@ -40,8 +40,6 @@ export const render = (
   }
 
   const currentNode = node || maze.currentNode
-  // const frontLayer: Layer = {front: frames[layer], back: frames[layer+1]} 
-  // const backLayer: Layer = {front: frames[layer+1], back: frames[layer+2]}
   const { frontLayer, backLayer } = extractLayer(frames, layer)
 
   // if the stair appears, it's always just one pattern for rendering. 
@@ -56,7 +54,10 @@ export const render = (
   side(frontLayer, 'l', around.left)
   side(frontLayer, 'r', around.right)
   front(backLayer, around.front)
-  dark(backLayer, around)
+
+  if (isDeadEnd(around)) {
+    deadEnd(backLayer, layer === 0)
+  }
 
   if (around.front === 'corridor') {
     if (around.left === 'corridor') {

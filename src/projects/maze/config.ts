@@ -6,7 +6,7 @@ export const Conf = {
   ww: 0,
   wh: 0,
   fps: 30,
-  interval: 300,
+  interval: 0, // ms between rendering frames. depends on fps
   magnifyRates: [
     1, 0.7, 0.3, 0.2, 0.09, 0.04, 0.02
   ],
@@ -24,9 +24,14 @@ export const initConf = () => {
   Conf.wh = p.windowHeight
   Conf.interval = 1000 / Conf.fps
   Conf.mapSizing = p.windowWidth < 1000 ? 0.88 : 0.6
+  initColors()
+}
+
+const initColors = () => {
   Object.assign(colors, {
     fill: p.color(0, 250),
     stroke: p.color(200,200),
+    wallPicture: p.color(20),
   })
   Conf.colors = colors
 }
