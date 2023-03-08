@@ -56,7 +56,7 @@ export const render = (
   front(backLayer, around.front)
 
   if (isDeadEnd(around)) {
-    deadEnd(backLayer, layer === 0)
+    deadEnd(backLayer, layer === 0, currentNode.pos)
   }
 
   if (around.front === 'corridor') {

@@ -1,65 +1,82 @@
 import p5 from "p5";
-import { random } from "../../../lib/utils";
+import { colorCopy, pushPop, randomColor } from "../../../lib/utils";
 import { randomBetween } from "../../sk_01/utils";
 import { Conf } from "../config";
+import { getDeadEndItem, putDeadEndItem } from "../core/deadend";
 
-export function img(pos: number[], size:number[]) {
-  let img = p.createImage(size[0],size[1]);
-  img.loadPixels();
-
-  // helper for writing color to array
-  function writeColor(
-    image:p5.Image, 
-    x:number, y:number, 
-    red:number, green:number, blue:number, alpha:number
-  ) {
-    let index = (x + y * p.width) * 4;
-    image.pixels[index] = red;
-    image.pixels[index + 1] = green;
-    image.pixels[index + 2] = blue;
-    image.pixels[index + 3] = alpha;
+export function callWallPicture(
+  pos: number[], size:number[], nodePos: number[]
+) {
+  const item = getDeadEndItem(nodePos)
+  if (item) {
+    p.image(item, pos[0], pos[1])
+  } 
+  else {
+    const g = setupPicture(size)
+    drawPicture(
+      nodePos,
+      pos, g,
+      () => bloom(
+        g,
+        [randomBetween(0, g.width), 0]
+      )
+    )
   }
-
-  let x, y;
-  // fill with random colors
-  for (y = 0; y < img.height; y++) {
-    for (x = 0; x < img.width; x++) {
-      let red = p.random(120);
-      let green = p.random(255);
-      let blue = p.random(255);
-      let alpha = 10;
-      writeColor(img, x, y, red, green, blue, alpha);
-    }
-  }
-
-  img.updatePixels();
-  p.image(img, pos[0], pos[1]);
 }
 
-export function putPicture(pos: number[], size:number[]) {
-  const pic = generatePicture(size)
-  p.image(pic, pos[0], pos[1]);
-}
-
-export function generatePicture(size:number[]) {
+function setupPicture(size:number[]) {
   const g = p.createGraphics(size[0], size[1])
-  drawPicture(g)
+  g.background(Conf.colors.wallPicture)
+  const c = colorCopy(Conf.colors.wallPicture)
+  c.setAlpha(20)
+  g.fill(c)
+  g.stroke(255)
   return g
 }
 
-function drawPicture(g: p5.Graphics) {
-  g.background(Conf.colors.wallPicture)
-  const c = Conf.colors.wallPicture
-  c.setAlpha(200)
-  g.stroke(255)
-  g.frameRate(Conf.fps)
+type Fn = () => Fn
 
-  g.line(
-    randomBetween(0, g.width),
-    randomBetween(0, g.height),
-    randomBetween(0, g.width),
-    randomBetween(0, g.height),
-  )
-  g.fill(c)
+function drawPicture(
+  nodePos: number[],
+  pos: number[], 
+  g: p5.Graphics,
+  fn: Fn,
+  n = 0
+) {
+  if (n>10) {
+    putDeadEndItem(nodePos, g)
+    return
+  }
+
+  const next = fn()
+  p.image(g, pos[0], pos[1])
+
+  setTimeout(() => {
+    drawPicture(
+      nodePos,
+      pos,
+      g,
+      next,
+      n+1
+    )
+  }, 30)
+}
+
+function bloom(g: p5.Graphics, pos: number[]) {
   
+  const dest = [
+    randomBetween(0, g.width), randomBetween(0, g.height)
+  ]
+
+  g.push()
+
+  g.noStroke()
+  g.rect(0, 0, g.width, g.height)
+
+  g.stroke(255)
+  g.line(pos[0], pos[1], dest[0], dest[1])
+
+  g.pop()
+
+  return () => bloom(g, dest)
 }
