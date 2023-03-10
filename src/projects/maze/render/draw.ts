@@ -1,8 +1,7 @@
 import { pushPop } from "../../../lib/utils"
-import { Layer, frameWidthAndHeight } from "./frame"
+import { Layer, frameWidthAndHeight, wallPictureFrame } from "./frame"
 import { PathPattern, Terrain } from "."
 import { callWallPicture, emptyPicture } from "./wall"
-import { Conf } from "../config"
 
 export const pointLine = (p1: number[], p2: number[]) => {
   p.line(p1[0], p1[1], p2[0], p2[1])
@@ -90,16 +89,17 @@ export const deadEnd = (
   close: boolean,
   nodePos: number[]
 ) => {
-  const [w, h] = frameWidthAndHeight(l.back)
+  const pf = wallPictureFrame(l.front)
+  const [w, h] = frameWidthAndHeight(pf)
   if (close) {
     return callWallPicture(
-      l.back.tl,
+      pf.tl,
       [w,h],
-      nodePos,
+      nodePos
     )
   } else {
     emptyPicture(
-      l.back.tl,
+      pf.tl,
       [w,h]
     )
   }

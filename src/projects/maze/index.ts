@@ -33,12 +33,6 @@ const setup = () => {
 
   c.mousePressed(start)
   c.touchStarted(start)
-
-  callWallPicture(
-    [423.5, 269],
-    [363, 231.29999],
-    [6,0]
-  )
 }
 
 const setupMaze = () => {

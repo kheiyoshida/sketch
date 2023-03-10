@@ -10,7 +10,8 @@ export const Conf = {
   magnifyRates: [
     1, 0.7, 0.3, 0.2, 0.09, 0.04, 0.02
   ],
-  mapSizing: 0.5,
+  mapSizing: 0.66,
+  pictureMagnify: 0.75,
   colors,
 }
 
@@ -29,9 +30,10 @@ export const initConf = () => {
 
 const initColors = () => {
   Object.assign(colors, {
-    fill: p.color(0, 250),
-    stroke: p.color(200,200),
-    wallPicture: p.color(10, 80),
+    fill: p.color(5, 250),
+    stroke: p.color(180,200),
+    mellowStroke: p.color(200,100),
+    wallPicture: p.color(20, 120),
   })
   Conf.colors = colors
 }

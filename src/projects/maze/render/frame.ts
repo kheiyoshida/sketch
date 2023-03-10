@@ -85,3 +85,24 @@ export const assumeSecondFrame = (f: Frame):Frame => {
     br: [f.br[0], secondFrameBottom]
   }
 }
+
+export const wallPictureFrame = (f: Frame):Frame => {
+  const originalHeight = f.bl[1] - f.tl[1]
+  const originalWidth = f.tr[0] - f.tl[0]
+  let width, height
+  if (originalHeight > originalWidth) {
+    width = originalWidth * Conf.pictureMagnify
+    height = width 
+  } else {
+    height = originalHeight * Conf.pictureMagnify
+    width = height 
+  }
+  const heightPadding = (originalHeight - height) * 0.5
+  const widthPadding = (originalWidth - width) * 0.5
+  return {
+    tl: [f.tl[0] + widthPadding, f.tl[1] + heightPadding],
+    tr: [f.tr[0] - widthPadding, f.tr[1] + heightPadding],
+    bl: [f.bl[0] + widthPadding, f.bl[1] - heightPadding],
+    br: [f.br[0] - widthPadding, f.br[1] - heightPadding]
+  }
+}

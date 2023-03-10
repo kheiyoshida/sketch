@@ -19,11 +19,12 @@ export const emptyPicture = (
   })
 }
 
-const FlowerConf = {
+export const FlowerConf = {
   minSeedNum: 3,
   maxSeedNum: 7,
   minPetalLen: 0,
   maxPetalLen: 2,
+  faceWall: false,
 }
 
 let unit: number
@@ -49,6 +50,9 @@ export const callWallPicture = (
   else {
     const g = setupPicture(size)
     const seeds = initSeeds(g)
+    const c = randomColor()
+    c.setAlpha(120)
+    g.stroke(c)
     sequence(
       () => moment(
         seeds.map(s => () => grow(g, s)),
@@ -58,7 +62,7 @@ export const callWallPicture = (
         },
         renderGraphic(g,pos)
       ),
-      Conf.interval
+      Conf.interval / 2
     )
     putDeadEndItem(nodePos, true)
   }
@@ -66,7 +70,7 @@ export const callWallPicture = (
 
 const graphicOverDraw = (g: p5.Graphics) => {
   g.push()
-  g.stroke(Conf.colors.stroke)
+  g.stroke(Conf.colors.mellowStroke)
   g.rect(0,0,g.width, g.height)
   g.pop()
 }
@@ -74,8 +78,8 @@ const graphicOverDraw = (g: p5.Graphics) => {
 const changeStrokeColor = (g: p5.Graphics) => {
   if(random(0.2)) {
     const c = randomColor()
+    c.setAlpha(120)
     g.stroke(c)
-
   }
 }
 
