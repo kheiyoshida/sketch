@@ -3,6 +3,7 @@ import { music } from "./sound"
 import { start as toneStart } from 'tone'
 import { Conf, initConf } from "./config"
 import { bindControl, Control } from "./control"
+import { callWallPicture } from "./render/wall"
 
 let started = false
 
@@ -32,6 +33,12 @@ const setup = () => {
 
   c.mousePressed(start)
   c.touchStarted(start)
+
+  callWallPicture(
+    [423.5, 269],
+    [363, 231.29999],
+    [6,0]
+  )
 }
 
 const setupMaze = () => {

@@ -1,7 +1,7 @@
 import p5 from "p5"
 
 // maybe add variations in the future
-type DeadEndItem = p5.Graphics
+type DeadEndItem = p5.Graphics | true
 
 const deadEnds:{
   [k: string]: DeadEndItem

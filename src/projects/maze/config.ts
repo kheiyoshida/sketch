@@ -31,7 +31,7 @@ const initColors = () => {
   Object.assign(colors, {
     fill: p.color(0, 250),
     stroke: p.color(200,200),
-    wallPicture: p.color(20),
+    wallPicture: p.color(10, 80),
   })
   Conf.colors = colors
 }

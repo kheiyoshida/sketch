@@ -1,4 +1,5 @@
 import { random, randomIntBetween } from "../../../lib/utils"
+import { resetDeadEndItems } from "./deadend"
 import { compass, Direction, NESW } from "./direction"
 import { connRate, INITIAL_FLOOR_SIZE, fillRate, floorSize } from "./domain"
 
@@ -101,6 +102,7 @@ export class Maze {
   public goDownStairs() {
     this._floor += 1
     this.generate()
+    resetDeadEndItems()
   }
 }
 
