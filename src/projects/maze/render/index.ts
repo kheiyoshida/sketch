@@ -4,7 +4,6 @@ import { compass, Direction } from '../core/direction'
 import { extractLayer, Frame } from "./frame"
 import { deadEnd, edge, framePaint, front, isDeadEnd, side } from "./draw"
 import { renderStair } from "./scene"
-import { FlowerConf } from "./wall"
 
 export type PathPattern = 'wall'|'corridor'
 

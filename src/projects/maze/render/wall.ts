@@ -10,7 +10,6 @@ export const emptyPicture = (
   size: number[]
 ) => {
   pushPop(() => {
-    // p.noStroke()
     p.fill(Conf.colors.wallPicture)
     p.rect(
       pos[0], pos[1],
@@ -33,7 +32,7 @@ const setupPicture = (size:number[]) => {
   const g = p.createGraphics(size[0], size[1])
   g.background(Conf.colors.wallPicture)
   const c = colorCopy(Conf.colors.wallPicture)
-  c.setAlpha(10)
+  c.setAlpha(5)
   g.fill(c)
   g.stroke(255)
   unit = g.height / 30

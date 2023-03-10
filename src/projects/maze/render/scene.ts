@@ -30,7 +30,6 @@ export const renderStair = (
   else {
     const secondFront = assumeSecondFrame(hdFrontBack)
     pushPop(() => {
-      // p.stroke(200,0,0)
       pointLine(hdFrontBack.bl, secondFront.bl)
       pointLine(hdFrontBack.br, secondFront.br)
       pointLine(f.front.bl, secondFront.bl)
